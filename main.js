@@ -1,6 +1,6 @@
 (() => {
   const statusEl = document.getElementById("status");
-  const CLIENT_KEY = window.TIKTOK_CLIENT_KEY || "REPLACE_WITH_TIKTOK_CLIENT_KEY";
+  const CLIENT_KEY = window.TIKTOK_CLIENT_KEY || "sbawtotuwt54jl0g4o";
   const REDIRECT_URI =
     window.TIKTOK_REDIRECT_URI || `${window.location.origin.replace(/\/$/, "")}/`;
 
