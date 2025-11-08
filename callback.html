@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hop2Top - TikTok Callback</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #FF007F, #00D4FF);
+      color: white;
+      text-align: center;
+    }
+    code {
+      background: rgba(255,255,255,0.1);
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Conectat cu succes la TikTok ✅</h1>
+  <p>Codul de autorizare:</p>
+  <p><code id="code">Se încarcă...</code></p>
+  <p>Puteți închide această pagină și reveni la aplicație.</p>
+
+  <script>
+    const params = new URL(location.href).searchParams;
+    const code = params.get("code");
+    document.getElementById("code").textContent = code || "Lipsă cod.";
+  </script>
+</body>
+</html>
