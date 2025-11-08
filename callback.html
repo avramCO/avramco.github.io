@@ -29,10 +29,12 @@
   <p><code id="code">Se încarcă...</code></p>
   <p>Puteți închide această pagină și reveni la aplicație.</p>
 
-  <script>
-    const params = new URL(location.href).searchParams;
-    const code = params.get("code");
-    document.getElementById("code").textContent = code || "Lipsă cod.";
-  </script>
+  
+<script>
+  const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";  // EDIT THIS
+  const code = new URL(location).searchParams.get("code");
+  if (code) fetch(`${BACKEND_URL}/callback?code=${encodeURIComponent(code)}`) ...
+</script>
+
 </body>
 </html>
