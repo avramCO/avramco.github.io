@@ -1,92 +1,53 @@
-// =============== Hop2Top TikTok Login ===============
-// This file builds the OAuth URL, connects the button,
-// and shows helpful logs & fallbacks for debugging.
-// ====================================================
-
 console.log("✅ main.js loaded");
 
-// 🔧 Config values are read from window.TIKTOK_* defined in index.html
-const CLIENT_KEY = window.TIKTOK_CLIENT_KEY;
+const CLIENT_KEY   = window.TIKTOK_CLIENT_KEY;
 const REDIRECT_URI = window.TIKTOK_REDIRECT_URI;
-const SCOPES = window.TIKTOK_SCOPES || "user.info.basic,video.upload,video.publish";
+const SCOPES       = window.TIKTOK_SCOPES || "user.info.basic";
+const BACKEND_URL  = window.BACKEND_URL;
 
-const STATUS_EL_ID = "status";
-const FALLBACK_ID = "oauth-fallback";
-const BUTTON_ID = "login-btn";
+function statusBox(msg){
+  const el = document.getElementById("status");
+  if (el) el.textContent = msg;
+  console.log(msg);
+}
 
-// ----------------------------------------------------
-// Helper: Build OAuth URL correctly
-// ----------------------------------------------------
-function buildTikTokAuthURL() {
-  if (!CLIENT_KEY || !REDIRECT_URI) {
-    const msg = "⚠️ Lipsă TikTok client_key sau redirect_uri. Configurați-le în window.TIKTOK_CLIENT_KEY / window.TIKTOK_REDIRECT_URI.";
-    console.warn(msg);
-    updateStatus(msg);
-    throw new Error(msg);
-  }
-
+function buildAuthURL(){
+  if(!CLIENT_KEY || !REDIRECT_URI) throw new Error("Missing client_key/redirect_uri");
   const u = new URL("https://www.tiktok.com/v2/auth/authorize/");
   u.searchParams.set("client_key", CLIENT_KEY);
   u.searchParams.set("scope", SCOPES);
   u.searchParams.set("response_type", "code");
   u.searchParams.set("redirect_uri", REDIRECT_URI);
   u.searchParams.set("state", crypto.randomUUID());
-
   return u.toString();
 }
 
-// ----------------------------------------------------
-// Helper: Update status text (optional UI feedback)
-// ----------------------------------------------------
-function updateStatus(msg) {
-  const el = document.getElementById(STATUS_EL_ID);
-  if (el) el.textContent = msg;
-  console.log(msg);
+function loginTikTok(e){
+  e && e.preventDefault();
+  const url = buildAuthURL();
+  statusBox("Redirecționare către TikTok…");
+  location.href = url;
 }
 
-// ----------------------------------------------------
-// Core: Perform TikTok OAuth redirect
-// ----------------------------------------------------
-function loginTikTok(e) {
-  if (e) e.preventDefault();
-  try {
-    const authUrl = buildTikTokAuthURL();
-    console.log("Redirecting to TikTok:", authUrl);
-    updateStatus("Redirecting to TikTok...");
-    // use full page redirect (popup blockers safe)
-    window.location.href = authUrl;
-  } catch (err) {
-    console.error("Login error:", err);
-  }
+async function callGenerate(){
+  if(!BACKEND_URL) return statusBox("Config BACKEND_URL lipsă.");
+  statusBox("Generez video…");
+  const r = await fetch(`${BACKEND_URL}/generate`, {method:"POST"});
+  const j = await r.json();
+  statusBox(j.ok ? `✅ Video pregătit: ${j.file}` : "❌ Nu s-a găsit fișierul.");
 }
 
-// ----------------------------------------------------
-// Auto-setup on page load
-// ----------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById(BUTTON_ID);
-  const fallback = document.getElementById(FALLBACK_ID);
+async function callUpload(){
+  if(!BACKEND_URL) return statusBox("Config BACKEND_URL lipsă.");
+  statusBox("Urc pe TikTok…");
+  const r = await fetch(`${BACKEND_URL}/upload`, {method:"POST"});
+  const j = await r.json();
+  statusBox(j.ok ? "✅ Upload/Publish reușit!" : `❌ Eroare: ${JSON.stringify(j).slice(0,200)}…`);
+}
 
-  // 1️⃣ Attach click handler
-  if (btn) {
-    btn.addEventListener("click", loginTikTok);
-    console.log("✅ TikTok login button attached.");
-  } else {
-    console.warn("⚠️ No button with id='login-btn' found.");
-  }
-
-  // 2️⃣ Set up fallback link (works even if JS handler fails)
-  try {
-    const authUrl = buildTikTokAuthURL();
-    if (fallback) {
-      fallback.href = authUrl;
-      fallback.style.display = "inline-block";
-      console.log("✅ Fallback login link ready.");
-    }
-  } catch (err) {
-    console.warn("Fallback not built:", err);
-  }
-
-  // 3️⃣ Optional: Show confirmation in status element
-  updateStatus("Ready to connect TikTok 🔗");
+document.addEventListener("DOMContentLoaded", ()=>{
+  document.getElementById("login-btn")?.addEventListener("click", loginTikTok);
+  document.getElementById("generate-btn")?.addEventListener("click", callGenerate);
+  document.getElementById("upload-btn")?.addEventListener("click", callUpload);
+  statusBox("Ready to connect TikTok 🔗");
 });
