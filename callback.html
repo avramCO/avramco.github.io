@@ -17,47 +17,38 @@
   <p id="status">Pregătesc schimbul cod → token…</p>
 
   <script>
-    // 🔧 EDIT: set your ngrok/public backend URL here (MUST be https)
-    const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev/";
+    // 🔧 replace with your live HTTPS ngrok URL
+    const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
 
-    const url = new URL(location.href);
-    const p = url.searchParams;
-
-    // TikTok should send ?code=..., but some flows use ?auth_code=...
+    const p = new URL(location.href).searchParams;
     const code = p.get("code") || p.get("auth_code");
-    const err  = p.get("error") || p.get("errCode");
-    const desc = p.get("error_description") || p.get("errMsg");
-
     const codeEl = document.getElementById("code");
     const statusEl = document.getElementById("status");
 
-    if (err) {
+    if (!code) {
       codeEl.textContent = "—";
-      statusEl.textContent = `❌ Eroare TikTok: ${err} ${desc ? " – " + desc : ""}`;
-    } else if (!code) {
-      codeEl.textContent = "—";
-      statusEl.textContent = "❌ Lipsă parametru ?code în URL. Verifică Redirect URL și scope-urile.";
+      statusEl.textContent = "❌ Lipsă ?code în URL.";
     } else {
       codeEl.textContent = code;
-      // forward to backend to exchange for access_token
-      fetch(`${BACKEND_URL}/callback?code=${encodeURIComponent(code)}`, { method: "GET" })
-        .then(r => r.json())
-        .then(j => {
-          if (j && j.ok) {
-            statusEl.textContent = "✅ Token obținut. Poți reveni la aplicație.";
-          } else {
-            statusEl.textContent = "❌ Eroare la schimbul de token cu backend.";
-            console.log("Callback response:", j);
+      const url = `${BACKEND_URL}/callback?code=${encodeURIComponent(code)}`;
+      statusEl.textContent = "→ Trimit la backend: " + url;
+
+      fetch(url)
+        .then(async (r) => {
+          const txt = await r.text();
+          try {
+            const j = JSON.parse(txt);
+            statusEl.textContent = j.ok ? "✅ Token obținut. Revin la aplicație…" : "❌ Eșec la schimb.";
+            if (j.ok) setTimeout(()=> location.href = "https://avramco.github.io/?connected=1", 1200);
+          } catch {
+            statusEl.textContent = "❌ Răspuns non-JSON: " + txt.slice(0,200);
           }
         })
-        .catch(e => {
+        .catch((e) => {
           statusEl.textContent = "❌ Nu am reușit să contactez backend-ul.";
           console.error(e);
         });
     }
-
-    // (optional) after a few seconds, return to homepage
-    setTimeout(()=> location.href = "https://avramco.github.io/", 10500);
   </script>
 </body>
 </html>
