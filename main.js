@@ -25,7 +25,7 @@ function buildTikTokAuthURL() {
     throw new Error(msg);
   }
 
-  const u = new URL("https://www.tiktok.com/auth/authorize");
+  const u = new URL("https://www.tiktok.com/v2/auth/authorize/");
   u.searchParams.set("client_key", CLIENT_KEY);
   u.searchParams.set("scope", SCOPES);
   u.searchParams.set("response_type", "code");
