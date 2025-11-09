@@ -31,7 +31,7 @@
 
   
 <script>
-  const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";  // EDIT THIS
+  const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev/";  // EDIT THIS
   const code = new URL(location).searchParams.get("code");
   if (code) fetch(`${BACKEND_URL}/callback?code=${encodeURIComponent(code)}`) ...
 </script>
