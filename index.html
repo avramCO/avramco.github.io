@@ -165,18 +165,21 @@
       </footer>
     </main>
     
-    <!-- keep your existing HTML/CSS; only this config block matters -->
+    <!-- keep your existing HTML/CSS/markup; add or update this config BEFORE main.js -->
 <script>
-  // raw client key (short value, no prefix)
+  // raw client key (short value; NO 'tiktok_webapp_client_' prefix)
   window.TIKTOK_CLIENT_KEY = "sbawtotuwt54jl0g4o";
+
+  // exact redirect saved in TikTok Login Kit
   window.TIKTOK_REDIRECT_URI = "https://avramco.github.io/callback.html";
 
-  // after Content Posting API is Added:
-  window.TIKTOK_SCOPES = "user.info.basic,video.upload,video.publish";
+  // while debugging token flow you can start with only "user.info.basic"
+  window.TIKTOK_SCOPES = "user.info.basic";
 
-  // 🔧 paste your current HTTPS ngrok URL
+  // your live HTTPS ngrok URL
   window.BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
 </script>
 <script src="main.js" defer></script>
+
   </body>
 </html>
