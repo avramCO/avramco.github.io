@@ -11,7 +11,7 @@ function setStatus(msg){
   console.log(msg);
 }
 
-// (optional) PKCE helpers — not strictly required, but recommended later
+// PKCE helpers
 async function sha256ToB64url(input) {
   const enc = new TextEncoder();
   const data = enc.encode(input);
@@ -32,10 +32,10 @@ function randVerifier(len=64){
 async function buildAuthURL(){
   if(!CLIENT_KEY || !REDIRECT_URI) throw new Error("Missing client_key/redirect_uri");
 
-  // You can enable PKCE later by uncommenting
-  // const verifier = randVerifier(64);
-  // localStorage.setItem("tiktok_pkce_verifier", verifier);
-  // const challenge = await sha256ToB64url(verifier);
+  // PKCE: store verifier for callback to send to backend
+  const verifier = randVerifier(64);
+  localStorage.setItem("tiktok_pkce_verifier", verifier);
+  const challenge = await sha256ToB64url(verifier);
 
   const u = new URL("https://www.tiktok.com/v2/auth/authorize/");
   u.searchParams.set("client_key", CLIENT_KEY);
@@ -43,8 +43,8 @@ async function buildAuthURL(){
   u.searchParams.set("response_type", "code");
   u.searchParams.set("redirect_uri", REDIRECT_URI);
   u.searchParams.set("state", crypto.randomUUID());
-  // u.searchParams.set("code_challenge", challenge);
-  // u.searchParams.set("code_challenge_method", "S256");
+  u.searchParams.set("code_challenge", challenge);
+  u.searchParams.set("code_challenge_method", "S256");
   return u.toString();
 }
 
