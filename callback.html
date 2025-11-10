@@ -4,10 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hop2Top - TikTok Callback</title>
+  <meta http-equiv="Cache-Control" content="no-store" />
   <style>
     body{font-family:system-ui,Segoe UI,Roboto;margin:40px;text-align:center;
       color:#fff;background:linear-gradient(135deg,#FF007F,#00D4FF)}
     code{background:rgba(255,255,255,.15);padding:6px 10px;border-radius:6px}
+    pre{white-space:pre-wrap;text-align:left;background:rgba(0,0,0,.25);padding:12px;border-radius:10px;max-width:900px;margin:16px auto}
   </style>
 </head>
 <body>
@@ -16,47 +18,42 @@
   <p><code id="code">Se încarcă…</code></p>
   <p id="status">Pregătesc schimbul cod → token…</p>
 
+  <pre id="raw" style="display:none"></pre>
+
   <script>
-    // 🔧 replace with your live HTTPS ngrok URL
+    // <<< EDIT >>> your live HTTPS ngrok URL
     const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
 
-    const sp   = new URL(location.href).searchParams;
-    const code = sp.get("code") || sp.get("auth_code");
+    const p = new URL(location.href).searchParams;
+    const code = p.get("code") || p.get("auth_code");
     const codeEl = document.getElementById("code");
     const statusEl = document.getElementById("status");
-    
-    codeEl.textContent = code || "❌ lipsă ?code în URL";
-    
+    const rawEl = document.getElementById("raw");
+
+    codeEl.textContent = code || "—";
+
     if (!code) {
-      statusEl.textContent = "❌ Lipsă cod – verifică Redirect URL și scope.";
+      statusEl.textContent = "❌ Lipsă ?code în URL.";
     } else {
       const url = `${BACKEND_URL}/callback?code=${encodeURIComponent(code)}`;
       statusEl.textContent = "→ Trimit la backend: " + url;
-      
-      fetch(url, {
-        method: "GET",
-        headers: {
-          "ngrok-skip-browser-warning": "true"   // ✅ avoids ngrok splash
-          }
-      })
+
+      fetch(url, { headers: { "ngrok-skip-browser-warning": "true" } })
         .then(async (r) => {
           const txt = await r.text();
-          let j;
-          try { j = JSON.parse(txt); } catch {}
-          console.log("Raw backend response:", txt);
-          
+          console.log("Backend response:", txt);
+          let j; try { j = JSON.parse(txt); } catch {}
           if (j && j.ok) {
             statusEl.textContent = "✅ Token obținut. Revin la aplicație…";
-            setTimeout(() => location.href = "https://avramco.github.io/?connected=1", 1500);
+            setTimeout(()=> location.href = "https://avramco.github.io/?connected=1", 1500);
           } else {
             statusEl.textContent = "❌ Eșec la schimb.";
-            // show the exact reason on screen
-            const pre = document.createElement("pre");
-            pre.style.whiteSpace = "pre-wrap";
-            pre.textContent = txt;
-            document.body.appendChild(pre);
+            rawEl.style.display = "block"; rawEl.textContent = txt.slice(0, 4000);
           }
         })
+        .catch((e) => {
+          statusEl.textContent = "❌ Fetch a eșuat: " + (e.message || e);
+        });
     }
   </script>
 </body>
