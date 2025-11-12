@@ -39,6 +39,8 @@
     const url = `${BACKEND_URL}/callback?code=${encodeURIComponent(code)}&code_verifier=${encodeURIComponent(verifier)}`;
     statusEl.textContent = "→ Trimit la backend: " + url;
 
+    console.log("📡 Callback URL: ", url);
+
     fetch(url, { headers: { "ngrok-skip-browser-warning": "true" } })
       .then(async (r) => {
         const txt = await r.text();
