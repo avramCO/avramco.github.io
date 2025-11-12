@@ -1,8 +1,9 @@
 const backendUrl = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
 
-document.getElementById("loginBtn").onclick = () => {
-    window.location.href = `${backendUrl}/oauth/start`;
-};
+document.getElementById('loginBtn').addEventListener('click', () => {
+  window.location.href = 'https://unspecialized-nonprotractile-sommer.ngrok-free.dev/auth/login';
+});
+
 
 document.getElementById("generateBtn").onclick = async () => {
     const res = await fetch(`${backendUrl}/generate`, { method: "POST", credentials: "include" });
