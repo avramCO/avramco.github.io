@@ -1,4 +1,4 @@
-const backendUrl = "https://<your-ngrok-subdomain>.ngrok.app";
+const backendUrl = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
 
 document.getElementById("loginBtn").onclick = () => {
     window.location.href = `${backendUrl}/oauth/start`;
