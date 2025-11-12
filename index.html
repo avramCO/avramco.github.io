@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TikTok Video Uploader</title>
+    <meta charset="UTF-8">
+    <title>Hop2Top</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>TikTok API Video Upload Demo</h1>
-  <!-- Login and Upload interface -->
-  <button id="login-btn">🔑 Login with TikTok</button>
-  <button id="upload-btn" style="display:none;">⬆️ Upload Video</button>
-  <p id="message"></p>
-  <!-- Include the front-end script -->
-  <script src="main.js"></script>
+    <div id="app">
+        <h1>Welcome to Hop2Top</h1>
+        <p>Log in with TikTok, generate a random video, and upload it to your TikTok account!</p>
+        <button id="loginBtn">Login with TikTok</button>
+        <button id="generateBtn" disabled>Generate Video</button>
+        <button id="uploadBtn" disabled>Upload to TikTok</button>
+        <div id="status"></div>
+    </div>
+    <script src="app.js"></script>
 </body>
 </html>
