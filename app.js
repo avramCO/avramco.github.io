@@ -1,7 +1,7 @@
 const backendUrl = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
 
 document.getElementById('loginBtn').addEventListener('click', () => {
-  window.location.href = 'https://unspecialized-nonprotractile-sommer.ngrok-free.dev/v2/oauth/start';
+  window.location.href = 'https://unspecialized-nonprotractile-sommer.ngrok-free.dev/oauth/start';
 });
 
 
