@@ -1,57 +1,66 @@
 document.addEventListener("DOMContentLoaded", () => {
   const loginBtn = document.getElementById("login-btn");
-  const genBtn = document.getElementById("generate-btn");
+  const generateBtn = document.getElementById("generate-btn");
   const uploadBtn = document.getElementById("upload-btn");
   const statusEl = document.getElementById("status");
 
-  const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
+  console.log("main.js loaded");
 
-  // Redirect to TikTok login (or directly to TikTok if handled client-side)
   loginBtn.onclick = () => {
-    window.location.href = `${BACKEND_URL}/login`;
+    console.log("Login with TikTok clicked");
+
+    if (!window.TIKTOK_CLIENT_KEY || !window.TIKTOK_REDIRECT_URI) {
+      alert("Lipsă TikTok client_key. Configurați-l în window.TIKTOK_CLIENT_KEY.");
+      return;
+    }
+
+    const state = crypto.randomUUID();
+    const scopes = window.TIKTOK_SCOPES || "user.info.basic";
+    const url = new URL("https://www.tiktok.com/auth/authorize");
+    url.searchParams.set("client_key", window.TIKTOK_CLIENT_KEY);
+    url.searchParams.set("scope", scopes);
+    url.searchParams.set("response_type", "code");
+    url.searchParams.set("redirect_uri", window.TIKTOK_REDIRECT_URI);
+    url.searchParams.set("state", state);
+
+    window.location.href = url.toString();
   };
 
-  // Trigger video generation
-  genBtn.onclick = () => {
-    statusEl.textContent = "Generating video...";
-    fetch(`${BACKEND_URL}/generate`, {
-      method: "GET",
-      headers: { "ngrok-skip-browser-warning": "true" }
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === "ok") {
-          statusEl.textContent = "Video generated: " + (data.message || "");
-        } else {
-          statusEl.textContent = "Video generation failed: " + (data.error || "");
-        }
-      })
-      .catch(err => {
-        console.error("Error calling /generate:", err);
-        statusEl.textContent = "Error generating video.";
-      });
-  };
-
-  // Upload the generated video to TikTok
-  uploadBtn.onclick = () => {
-    statusEl.textContent = "Uploading video to TikTok...";
-    fetch(`${BACKEND_URL}/upload`, {
+  generateBtn.onclick = () => {
+    statusEl.textContent = "Generez video…";
+    fetch(`${window.BACKEND_URL}/generate`, {
       method: "POST",
       headers: { "ngrok-skip-browser-warning": "true" }
     })
-      .then(res => res.json())
+      .then(r => r.json())
       .then(data => {
-        if (data.error) {
-          alert("Upload failed: " + data.error);
-          statusEl.textContent = "Upload failed: " + data.error;
+        statusEl.textContent = "Video generat.";
+        console.log("generate:", data);
+      })
+      .catch(e => {
+        statusEl.textContent = "Eroare la generare.";
+        console.error(e);
+      });
+  };
+
+  uploadBtn.onclick = () => {
+    statusEl.textContent = "Urc pe TikTok…";
+    fetch(`${window.BACKEND_URL}/upload`, {
+      method: "POST",
+      headers: { "ngrok-skip-browser-warning": "true" }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data && data.ok) {
+          statusEl.textContent = "✅ Urcat cu succes.";
         } else {
-          alert("Upload successful!");
-          statusEl.textContent = "Upload successful. Check TikTok for the uploaded video.";
+          statusEl.textContent = "❌ Upload eșuat.";
+          console.error(data);
         }
       })
-      .catch(err => {
-        console.error("Error calling /upload:", err);
-        statusEl.textContent = "Error uploading video.";
+      .catch(e => {
+        statusEl.textContent = "❌ Eroare la upload.";
+        console.error(e);
       });
   };
 });
