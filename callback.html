@@ -2,49 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TikTok Login Callback</title>
+  <title>TikTok OAuth Callback</title>
 </head>
 <body>
-  <p id="message">Processing TikTok login...</p>
+  <h2>Login successful!</h2>
+  <p>You can close this window.</p>
   <script>
-    // Parse query parameters for "code" (and "error_description" if present)
-    const params = new URLSearchParams(window.location.search);
-    const authCode = params.get("code");
-    const errorDesc = params.get("error_description");
-    const messageEl = document.getElementById("message");
-    if (authCode) {
-      // Exchange the code for an access token by calling the backend
-      fetch("/callback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: authCode })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.error) {
-          alert("TikTok login failed: " + data.error);
-          messageEl.textContent = "TikTok login failed. Please try again.";
-        } else {
-          // Successfully obtained access token
-          messageEl.textContent = "Login successful! You can close this page.";
-          alert("TikTok login successful!");
-          // Redirect back to the main page
-          window.location.href = "/index.html";
-        }
-      })
-      .catch(err => {
-        console.error("Error during token exchange:", err);
-        messageEl.textContent = "An error occurred during login.";
-      });
+    // If opened in a popup, notify the opener and close; otherwise, redirect to home.
+    if (window.opener) {
+      window.opener.postMessage('authorized', '*');
+      window.close();
     } else {
-      // Handle scenario where no code is present (e.g., error or user cancelled)
-      if (errorDesc) {
-        messageEl.textContent = "TikTok login error: " + errorDesc;
-        alert("TikTok login error: " + errorDesc);
-      } else {
-        messageEl.textContent = "No authorization code provided.";
-      }
+      window.location.href = '/';
     }
   </script>
 </body>
