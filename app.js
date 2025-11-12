@@ -1,7 +1,9 @@
-const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
+// use your exact ngrok host here
+const ABS_BACKEND_START = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev/oauth/start";
 
 document.getElementById("loginBtn").addEventListener("click", () => {
-  window.location.href = `${BACKEND_URL}/oauth/start`;
+  // force absolute redirect
+  window.location.assign(ABS_BACKEND_START);
 });
 
 document.getElementById("generateBtn").addEventListener("click", async () => {
