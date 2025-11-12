@@ -1,8 +1,7 @@
-
-const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev/v2/auth/start";
+const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
 
 document.getElementById("loginBtn").addEventListener("click", () => {
-  window.location.href = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev/oauth/start";
+  window.location.href = `${BACKEND_URL}/oauth/start`;
 });
 
 document.getElementById("generateBtn").addEventListener("click", async () => {
