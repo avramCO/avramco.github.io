@@ -37,11 +37,11 @@
     statusEl.textContent = "❌ Lipsă ?code în URL.";
   } else {
     const url = `${BACKEND_URL}/callback?code=${encodeURIComponent(code)}&code_verifier=${encodeURIComponent(verifier)}`;
+    console.log("📡 Callback URL: ", url);  // <-- Add this
     statusEl.textContent = "→ Trimit la backend: " + url;
-
-    console.log("📡 Callback URL: ", url);
-
+    
     fetch(url, { headers: { "ngrok-skip-browser-warning": "true" } })
+
       .then(async (r) => {
         const txt = await r.text();
         let j; try { j = JSON.parse(txt); } catch {}
