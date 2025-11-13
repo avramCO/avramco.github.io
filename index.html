@@ -5,17 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hop2Top</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+    body { font-family: 'Inter', Arial, sans-serif; margin: 2rem; color: #0f172a; }
     button { margin-right: 1rem; margin-top: 1rem; padding: 0.75rem 1.5rem; }
     #status { margin-top: 1.5rem; font-weight: bold; }
     label { display: block; margin-top: 1rem; }
-    input, select { padding: 0.5rem; margin-top: 0.25rem; width: 300px; }
-    section { border: 1px solid #ddd; padding: 1rem; margin-top: 1.5rem; border-radius: 8px; background: #fafafa; }
-    #privacyOptionList { padding-left: 1.25rem; }
-    .interaction-option { display: block; margin-top: 0.5rem; }
-    .interaction-option.disabled { color: #777; }
-    .consent { margin-top: 1.5rem; font-weight: 600; }
-    .notice { margin-top: 1rem; color: #444; }
+    input, select { padding: 0.5rem; margin-top: 0.25rem; width: 100%; max-width: 360px; }
+    section { border: 1px solid #e2e8f0; padding: 1.25rem; margin-top: 1.5rem; border-radius: 14px; background: #ffffff; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06); }
+    #privacyOptionList { padding-left: 0; list-style: none; }
+    .privacy-option { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; font-weight: 600; }
+    .privacy-option.disabled { color: #94a3b8; }
+    .interaction-option { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+    .interaction-option.disabled { color: #94a3b8; }
+    .consent-card { border: 1px solid #cbd5f5; background: #eef2ff; padding: 1rem; border-radius: 10px; margin-top: 1.5rem; font-weight: 600; }
+    .notice { margin-top: 1rem; color: #475569; }
+    .toggle { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-top: 0.5rem; }
+    .commercial-options { margin-top: 0.75rem; padding-left: 1rem; }
+    .commercial-options label { display: flex; align-items: center; gap: 0.5rem; }
+    .alert { color: #b91c1c; font-size: 0.95rem; margin-top: 0.5rem; }
+    .card-title { margin-bottom: 0.75rem; }
+    .button-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+    button.primary { background: #4338ca; color: #fff; border: none; border-radius: 999px; padding: 0.75rem 1.6rem; font-weight: 600; cursor: pointer; }
+    button.secondary { background: transparent; border: 1px solid #cbd5f5; border-radius: 999px; padding: 0.75rem 1.6rem; font-weight: 600; color: #4338ca; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    body { background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); font-family: 'Inter', Arial, sans-serif; }
   </style>
 </head>
 <body>
@@ -34,17 +47,18 @@
   </label>
 
   <section id="creatorSection" hidden>
-    <h2>Posting as <span id="creatorNickname">...</span></h2>
+    <h2 class="card-title">Posting as <span id="creatorNickname">...</span></h2>
     <p id="creatorAccountMeta"></p>
-    <button id="refreshCreatorInfo" type="button">Refresh TikTok account info</button>
+    <button class="secondary" id="refreshCreatorInfo" type="button">Refresh TikTok account info</button>
 
     <div id="privacyOptionsArea">
-      <h3>Privacy options returned by TikTok</h3>
+      <h3>Privacy options from TikTok</h3>
+      <div id="privacyDisclaimer" class="notice"></div>
       <ul id="privacyOptionList"></ul>
     </div>
 
     <div id="interactionControls">
-      <h3>Interactions (all off by default)</h3>
+      <h3>Interaction abilities (toggle on as needed)</h3>
       <label class="interaction-option">
         <input type="checkbox" id="allowComments">
         Allow comments
@@ -60,14 +74,43 @@
     </div>
   </section>
 
-  <label class="consent">
-    <input type="checkbox" id="musicConsent">
-    By posting, you agree to TikTok's Music Usage Confirmation.
-  </label>
+  <section id="previewSection" hidden>
+    <h2 class="card-title">Video Preview</h2>
+    <div id="previewDetails">Select a video to see preview information.</div>
+    <button class="secondary" id="refreshPreview" type="button">Refresh preview</button>
+  </section>
 
-  <button id="loginBtn">Login with TikTok</button>
-  <button id="generateBtn">Generate Video</button>
-  <button id="uploadBtn">Upload Video</button>
+  <section id="commercialSection">
+    <h2 class="card-title">Commercial Content Disclosure</h2>
+    <label class="toggle">
+      <input type="checkbox" id="commercialToggle">
+      This post promotes yourself, a brand, or a service
+    </label>
+    <div id="commercialOptions" class="commercial-options" hidden>
+      <label>
+        <input type="checkbox" id="commercialSelf">
+        Your brand (self promotion)
+      </label>
+      <label>
+        <input type="checkbox" id="commercialBrand">
+        Branded content (third party)
+      </label>
+      <p id="commercialAlert" class="alert"></p>
+    </div>
+  </section>
+
+  <div class="consent-card" id="consentCard">
+    <label class="consent">
+      <input type="checkbox" id="musicConsent">
+      <span id="consentText">By posting, you agree to TikTok's Music Usage Confirmation.</span>
+    </label>
+  </div>
+
+  <div class="button-row">
+    <button id="loginBtn" class="secondary">Login with TikTok</button>
+    <button id="generateBtn" class="secondary">Generate Video</button>
+    <button id="uploadBtn" class="primary">Upload Video</button>
+  </div>
 
   <p id="postingNotice" class="notice"></p>
   <p class="notice">
