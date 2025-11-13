@@ -8,12 +8,32 @@
     body { font-family: Arial, sans-serif; margin: 2rem; }
     button { margin-right: 1rem; margin-top: 1rem; padding: 0.75rem 1.5rem; }
     #status { margin-top: 1.5rem; font-weight: bold; }
+    label { display: block; margin-top: 1rem; }
+    input, select { padding: 0.5rem; margin-top: 0.25rem; width: 300px; }
   </style>
 </head>
 <body>
   <h1>Hop2Top TikTok Uploader</h1>
   <p>1. Click login and finish the TikTok consent screen.</p>
   <p>2. Once redirected back here, generate a video and upload it.</p>
+
+  <label>
+    Video title (required by TikTok):
+    <input
+      id="videoTitle"
+      type="text"
+      placeholder="Random video from Hop2Top"
+      required
+    >
+  </label>
+
+  <label>
+    Privacy level:
+    <select id="privacySelect">
+      <option value="PRIVATE_TO_ONLY_ME">Private (required until audit)</option>
+      <option value="PUBLIC_TO_EVERYONE">Public</option>
+    </select>
+  </label>
 
   <button id="loginBtn">Login with TikTok</button>
   <button id="generateBtn">Generate Video</button>
