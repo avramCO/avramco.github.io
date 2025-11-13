@@ -14,7 +14,7 @@ const allowStitchBox = document.getElementById("allowStitch");
 const refreshCreatorInfoBtn = document.getElementById("refreshCreatorInfo");
 const musicConsentCheckbox = document.getElementById("musicConsent");
 const postingNoticeEl = document.getElementById("postingNotice");
-const FORCED_VISIBILITY = "private";
+const FORCED_VISIBILITY = "SELF_ONLY";
 const uploadBtn = document.getElementById("uploadBtn");
 const previewSection = document.getElementById("previewSection");
 const previewDetails = document.getElementById("previewDetails");
@@ -25,6 +25,9 @@ const commercialSelf = document.getElementById("commercialSelf");
 const commercialBrand = document.getElementById("commercialBrand");
 const commercialAlert = document.getElementById("commercialAlert");
 const consentText = document.getElementById("consentText");
+const workflowPanel = document.getElementById("workflowPanel");
+const successPanel = document.getElementById("successPanel");
+const homeBtn = document.getElementById("homeBtn");
 const privateAccountConfirm = document.getElementById("privateAccountConfirm");
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 let creatorInfo = null;
@@ -88,12 +91,12 @@ function renderPrivacyOptions(options) {
   if (options && options.length) {
     disclaimer.push("Select one of the options TikTok allows for your account.");
   }
-  if (!optionsArray.includes("private")) {
-    optionsArray.push("private");
+  if (!optionsArray.includes("SELF_ONLY")) {
+    optionsArray.push("SELF_ONLY");
   }
   privacyDisclaimer.textContent =
     disclaimer.join(" ") ||
-    "TikTok currently restricts this integration to private uploads.";
+    "TikTok currently restricts this integration to 'Self Only' uploads.";
   let hasSelection = false;
   optionsArray.forEach((option) => {
     const li = document.createElement("li");
@@ -120,7 +123,8 @@ function renderPrivacyOptions(options) {
     }
     label.appendChild(input);
     const text = document.createElement("span");
-    text.textContent = option === "private" ? "Private (Only me)" : option;
+    text.textContent =
+      option.toUpperCase() === "SELF_ONLY" ? "Self Only (Only you)" : option;
     label.appendChild(text);
     li.appendChild(label);
     privacyOptionList.appendChild(li);
@@ -277,9 +281,11 @@ captureSessionFromUrl();
 setUploadAvailability(
   Boolean(sessionToken),
   sessionToken
-    ? "Uploads are currently limited to 'Private' visibility."
+    ? "Uploads are currently limited to TikTok's 'Self Only' visibility."
     : "Log in with TikTok to enable uploads."
 );
+if (successPanel) successPanel.hidden = true;
+if (workflowPanel) workflowPanel.hidden = false;
 
 async function callBackend(endpoint, { method = "GET", body, headers = {} } = {}) {
   const options = {
@@ -364,6 +370,11 @@ if (commercialSelf) {
 if (commercialBrand) {
   commercialBrand.addEventListener("change", updateConsentText);
 }
+if (homeBtn) {
+  homeBtn.addEventListener("click", () => {
+    window.location.href = "https://avramco.github.io/";
+  });
+}
 
 document.getElementById("generateBtn").addEventListener("click", async () => {
   setStatus("Selecting a random video...");
@@ -389,11 +400,13 @@ document.getElementById("generateBtn").addEventListener("click", async () => {
 
 document.getElementById("uploadBtn").addEventListener("click", async () => {
   setStatus("Uploading to TikTok...");
+  if (workflowPanel) workflowPanel.hidden = false;
+  if (successPanel) successPanel.hidden = true;
   try {
     requireSession();
     if (privateAccountConfirm && !privateAccountConfirm.checked) {
       setStatus(
-        "Please confirm that your TikTok account is set to Private and visibility will remain 'Only You'.",
+        "Please confirm that your TikTok account is set to Private and visibility will remain 'Self Only'.",
         "error"
       );
       privateAccountConfirm.focus();
@@ -428,7 +441,7 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     }
     if (selectedPrivacy !== FORCED_VISIBILITY) {
       setStatus(
-        "This sandbox can only upload with private visibility until TikTok approves the app.",
+        "This sandbox can only upload with TikTok's 'Self Only' visibility until the app is approved.",
         "error"
       );
       return;
@@ -455,12 +468,16 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     });
     console.log("Upload result:", data);
     setStatus("Upload requested. Check TikTok for processing status.");
+    if (workflowPanel) workflowPanel.hidden = true;
+    if (successPanel) successPanel.hidden = false;
   } catch (err) {
     console.error(err);
     if (err.message === "Missing session token") {
       return;
     }
     setStatus(`Upload failed: ${err.message}`, "error");
+    if (workflowPanel) workflowPanel.hidden = false;
+    if (successPanel) successPanel.hidden = true;
   }
 });
 
