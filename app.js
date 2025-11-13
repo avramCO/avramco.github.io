@@ -31,6 +31,12 @@ const privateAccountConfirm = document.getElementById("privateAccountConfirm");
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 let creatorInfo = null;
 let selectedPrivacy = null;
+const ORDERED_PRIVACY_VALUES = [
+  "PUBLIC",
+  "PRIVATE",
+  "MUTUAL_FOLLOW_FRIENDS",
+  "SELF_ONLY",
+];
 
 function setStatus(message, type = "info") {
   statusEl.textContent = message;
@@ -83,10 +89,12 @@ function formatPrivacyLabel(option) {
   }
   const normalized = option.toUpperCase();
   const labels = {
-    SELF_ONLY: "Self Only (Only you)",
-    FOLLOWER_OF_CREATOR: "Followers of the creator",
-    MUTUAL_FOLLOW_FRIENDS: "Friends (mutual follows)",
-    PUBLIC: "Public",
+    PUBLIC: "PUBLIC: Content is visible to everyone on TikTok.",
+    PRIVATE: "PRIVATE: Only the creator can view the content.",
+    MUTUAL_FOLLOW_FRIENDS:
+      "MUTUAL_FOLLOW_FRIENDS: Visible only to users who mutually follow the creator.",
+    SELF_ONLY:
+      "SELF_ONLY: Used in sandbox mode; content is restricted to the creator and not visible to others.",
   };
   return labels[normalized] || option.replace(/_/g, " ");
 }
@@ -106,18 +114,24 @@ function renderPrivacyOptions(options) {
   placeholder.hidden = true;
   privacySelect.appendChild(placeholder);
 
-  optionsArray.forEach((option) => {
+  const normalizedSet = new Set(optionsArray.map((opt) => opt.toUpperCase()));
+  const hasApiOptions = optionsArray.length > 0;
+
+  ORDERED_PRIVACY_VALUES.forEach((option) => {
     const opt = document.createElement("option");
     opt.value = option;
     opt.textContent = formatPrivacyLabel(option);
+    if (hasApiOptions && !normalizedSet.has(option)) {
+      opt.disabled = true;
+    }
     privacySelect.appendChild(opt);
   });
 
-  privacySelect.disabled = optionsArray.length === 0;
+  privacySelect.disabled = !hasApiOptions;
   selectedPrivacy = null;
   privacySelect.value = "";
 
-  if (!optionsArray.length) {
+  if (!hasApiOptions) {
     privacyDisclaimer.textContent =
       "TikTok did not return any privacy levels for this account.";
   } else {
