@@ -2,6 +2,13 @@ const BACKEND_URL =
   window.BACKEND_URL || "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
 const SESSION_STORAGE_KEY = "hop2topSessionToken";
 const statusEl = document.getElementById("status");
+const titleInput = document.getElementById("videoTitle");
+const privacySelect = document.getElementById("privacySelect");
+const ALLOWED_PRIVACY = [
+  "PRIVATE_TO_ONLY_ME",
+  "FRIENDS_TO_MUTUAL_FOLLOWERS",
+  "PUBLIC_TO_EVERYONE",
+];
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 
 function setStatus(message, type = "info") {
@@ -117,8 +124,24 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
   setStatus("Uploading to TikTok...");
   try {
     requireSession();
+    const title = titleInput.value.trim();
+    if (!title) {
+      setStatus("Please enter a video title before uploading.", "error");
+      titleInput.focus();
+      return;
+    }
+
+    let privacy = privacySelect.value;
+    if (!ALLOWED_PRIVACY.includes(privacy)) {
+      privacy = "PRIVATE_TO_ONLY_ME";
+    }
+
     const data = await callBackend("/upload", {
       method: "POST",
+      body: {
+        title,
+        privacy_level: privacy,
+      },
     });
     console.log("Upload result:", data);
     setStatus("Upload requested. Check TikTok for processing status.");
