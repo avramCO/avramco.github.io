@@ -168,19 +168,6 @@
     .alert { color: #ff8585; font-size: 0.9rem; }
     #status { margin-top: 1rem; font-weight: 600; color: var(--text); }
     .status-area { margin-top: 2rem; }
-    .success-message {
-      margin-top: 1.5rem;
-      padding: 1.25rem;
-      border-radius: 18px;
-      text-align: center;
-      background: rgba(111, 255, 186, 0.1);
-      border: 1px solid rgba(111, 255, 186, 0.4);
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #b5ffdc;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
     .dualflex { display: flex; gap: 1rem; flex-wrap: wrap; }
     .button-stack { display: flex; flex-direction: column; gap: 0.75rem; }
     .full { width: 100%; }
@@ -221,10 +208,23 @@
       color: var(--muted);
       line-height: 1.5;
     }
+    .success-panel {
+      text-align: center;
+      gap: 1.5rem;
+    }
+    .success-panel h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: #b5ffdc;
+      text-transform: uppercase;
+    }
+    .success-panel p {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.8);
+    }
   </style>
 </head>
 <body>
-  <main class="panel split">
+  <main id="workflowPanel" class="panel split">
     <section class="panel-left">
       <div class="panel-card highlight">
         <span class="field-label">Video title • required by TikTok</span>
@@ -286,9 +286,6 @@
         <p id="postingNotice" class="notice"></p>
         <p class="notice">After uploading, TikTok may take a few minutes to process your video. Check TikTok for final status.</p>
         <div id="status">Ready.</div>
-        <div id="successMessage" class="success-message" hidden>
-          Upload to TikTok successfully initiated. Please allow a few minutes for processing.
-        </div>
       </div>
     </section>
 
@@ -332,6 +329,12 @@
       </section>
     </section>
   </main>
+
+  <section id="successPanel" class="panel success-panel" hidden>
+    <h1>Upload to TikTok successfully initiated</h1>
+    <p>Please allow a few minutes for TikTok to finish processing. Once complete, you can view the video on your channel’s private tab.</p>
+    <button id="homeBtn" class="primary solid">Return to homepage</button>
+  </section>
 
   <script src="config.js"></script>
   <script src="app.js"></script>
