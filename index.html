@@ -2,13 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Hop2Top</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    button { margin-right: 1rem; margin-top: 1rem; padding: 0.75rem 1.5rem; }
+    #status { margin-top: 1.5rem; font-weight: bold; }
+  </style>
 </head>
 <body>
   <h1>Hop2Top TikTok Uploader</h1>
+  <p>1. Click login and finish the TikTok consent screen.</p>
+  <p>2. Once redirected back here, generate a video and upload it.</p>
+
   <button id="loginBtn">Login with TikTok</button>
   <button id="generateBtn">Generate Video</button>
   <button id="uploadBtn">Upload Video</button>
+
+  <div id="status">Ready.</div>
 
   <script src="app.js"></script>
 </body>
