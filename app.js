@@ -17,37 +17,80 @@ const postingNoticeEl = document.getElementById("postingNotice");
 const uploadBtn = document.getElementById("uploadBtn");
 const previewSection = document.getElementById("previewSection");
 const previewDetails = document.getElementById("previewDetails");
+const previewVideo = document.getElementById("previewVideo");
+const previewFallback = document.getElementById("previewFallback");
 const refreshPreviewBtn = document.getElementById("refreshPreview");
 const commercialToggle = document.getElementById("commercialToggle");
 const commercialOptions = document.getElementById("commercialOptions");
 const commercialSelf = document.getElementById("commercialSelf");
 const commercialBrand = document.getElementById("commercialBrand");
 const commercialAlert = document.getElementById("commercialAlert");
+const commercialPrompt = document.getElementById("commercialPrompt");
 const consentText = document.getElementById("consentText");
 const workflowPanel = document.getElementById("workflowPanel");
 const successPanel = document.getElementById("successPanel");
 const homeBtn = document.getElementById("homeBtn");
 const privateAccountConfirm = document.getElementById("privateAccountConfirm");
+const reviewConsentCheckbox = document.getElementById("reviewConsent");
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 let creatorInfo = null;
 let selectedPrivacy = null;
+let uploadBaseEnabled = false;
+let uploadCommercialBlocked = false;
+let resolvingBrandedConflict = false;
+let publishStatusInterval = null;
 const ORDERED_PRIVACY_VALUES = [
   "PUBLIC",
   "PRIVATE",
   "MUTUAL_FOLLOW_FRIENDS",
   "SELF_ONLY",
 ];
+const MUSIC_USAGE_LINK =
+  '<a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" class="policy-link" target="_blank" rel="noopener noreferrer">Music Usage Confirmation</a>';
+const BRANDED_POLICY_LINK =
+  '<a href="https://www.tiktok.com/legal/page/global/bc-policy/en" class="policy-link" target="_blank" rel="noopener noreferrer">Branded Content Policy</a>';
+const COMMERCIAL_SELECTION_TOOLTIP =
+  "You need to indicate if your content promotes yourself, a third party, or both.";
+const BRANDED_DISALLOWED_VISIBILITIES = new Set(["SELF_ONLY", "PRIVATE"]);
+const BRANDED_PRIVACY_TOOLTIP =
+  "Branded content visibility cannot be set to private.";
+const BRANDED_PRIVACY_AUTO_NOTICE =
+  "Branded content can't use private visibility. Switched to an allowed option.";
+const BRANDED_PRIVACY_UNAVAILABLE_NOTICE =
+  "Branded content visibility isn't available with your current TikTok privacy options.";
 
 function setStatus(message, type = "info") {
   statusEl.textContent = message;
   statusEl.style.color = type === "error" ? "#c01616" : "#111";
 }
 
-function setUploadAvailability(enabled, notice = "") {
-  uploadBtn.disabled = !enabled;
-  if (postingNoticeEl) {
-    postingNoticeEl.textContent = notice || "";
+function refreshUploadButtonState() {
+  if (!uploadBtn) {
+    return;
   }
+  uploadBtn.disabled = !(uploadBaseEnabled && !uploadCommercialBlocked);
+}
+
+function setCommercialRequirementBlocked(blocked) {
+  uploadCommercialBlocked = blocked;
+  if (uploadBtn) {
+    if (blocked) {
+      uploadBtn.setAttribute("title", COMMERCIAL_SELECTION_TOOLTIP);
+    } else {
+      uploadBtn.removeAttribute("title");
+    }
+  }
+  refreshUploadButtonState();
+}
+
+function setUploadAvailability(enabled, notice = "") {
+  uploadBaseEnabled = enabled;
+  if (postingNoticeEl) {
+    postingNoticeEl.textContent =
+      notice ||
+      "After you finish publishing, TikTok may take a few minutes to process your video.";
+  }
+  refreshUploadButtonState();
 }
 
 function applyInteractionControl(checkbox, serverValue) {
@@ -121,8 +164,12 @@ function renderPrivacyOptions(options) {
     const opt = document.createElement("option");
     opt.value = option;
     opt.textContent = formatPrivacyLabel(option);
-    if (hasApiOptions && !normalizedSet.has(option)) {
-      opt.disabled = true;
+    const baseDisabled = hasApiOptions && !normalizedSet.has(option);
+    opt.dataset.baseDisabled = baseDisabled ? "true" : "false";
+    opt.dataset.baseTitle = baseDisabled ? opt.title || "" : "";
+    opt.disabled = baseDisabled;
+    if (!baseDisabled) {
+      opt.removeAttribute("title");
     }
     privacySelect.appendChild(opt);
   });
@@ -138,42 +185,207 @@ function renderPrivacyOptions(options) {
     privacyDisclaimer.textContent =
       "Choose one of the privacy levels returned by TikTok.";
   }
+
+  applyPrivacyRestrictions();
+  handleBrandedPrivacyConflict();
 }
 
 function updateConsentText() {
-  let message = "By posting, you agree to TikTok's Music Usage Confirmation.";
-  if (commercialToggle.checked && commercialBrand.checked) {
-    message =
-      "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation.";
-  } else if (commercialToggle.checked && commercialSelf.checked) {
-    message =
-      "By posting, you agree to TikTok's Music Usage Confirmation.";
+  const brandChecked = Boolean(
+    commercialToggle?.checked && commercialBrand?.checked
+  );
+  if (!consentText) {
+    return;
   }
-  consentText.textContent = message;
+  if (brandChecked) {
+    consentText.innerHTML = `By posting, you agree to TikTok's ${BRANDED_POLICY_LINK} and ${MUSIC_USAGE_LINK}.`;
+  } else {
+    consentText.innerHTML = `By posting, you agree to TikTok's ${MUSIC_USAGE_LINK}.`;
+  }
+}
+
+function updateCommercialPrompt() {
+  let promptMessage = "";
+  const selfChecked = !!(commercialSelf && commercialSelf.checked);
+  const brandChecked = !!(commercialBrand && commercialBrand.checked);
+  if (brandChecked) {
+    promptMessage = "Your photo/video will be labeled as 'Paid partnership'.";
+  } else if (selfChecked) {
+    promptMessage = "Your photo/video will be labeled as 'Promotional content'.";
+  }
+  if (commercialPrompt) {
+    commercialPrompt.textContent = promptMessage;
+  }
+  enforceCommercialSelectionRequirement();
+  applyPrivacyRestrictions();
+  handleBrandedPrivacyConflict();
+}
+
+function applyPrivacyRestrictions() {
+  if (!privacySelect || !privacySelect.options.length) {
+    return;
+  }
+  const brandedSelected =
+    commercialToggle?.checked && commercialBrand?.checked;
+  Array.from(privacySelect.options).forEach((opt) => {
+    if (!opt.value) {
+      return;
+    }
+    const baseDisabled = opt.dataset.baseDisabled === "true";
+    const disallowedForBrand =
+      brandedSelected &&
+      BRANDED_DISALLOWED_VISIBILITIES.has(opt.value.toUpperCase());
+    opt.disabled = baseDisabled || disallowedForBrand;
+    const baseTitle = opt.dataset.baseTitle || "";
+    if (disallowedForBrand) {
+      opt.title = BRANDED_PRIVACY_TOOLTIP;
+    } else if (baseTitle) {
+      opt.title = baseTitle;
+    } else {
+      opt.removeAttribute("title");
+    }
+  });
+}
+
+function handleBrandedPrivacyConflict() {
+  if (
+    resolvingBrandedConflict ||
+    !privacySelect ||
+    !commercialToggle?.checked ||
+    !commercialBrand?.checked ||
+    !selectedPrivacy
+  ) {
+    return;
+  }
+  const normalized = selectedPrivacy.toUpperCase();
+  if (!BRANDED_DISALLOWED_VISIBILITIES.has(normalized)) {
+    return;
+  }
+  const usableOptions = Array.from(privacySelect.options).filter(
+    (opt) =>
+      opt.value &&
+      !opt.disabled &&
+      !BRANDED_DISALLOWED_VISIBILITIES.has(opt.value.toUpperCase())
+  );
+  const preferred =
+    usableOptions.find(
+      (opt) => opt.value.toUpperCase() === "PUBLIC" && !opt.disabled
+    ) || usableOptions[0];
+  if (preferred) {
+    resolvingBrandedConflict = true;
+    privacySelect.value = preferred.value;
+    selectedPrivacy = preferred.value;
+    resolvingBrandedConflict = false;
+    setStatus(BRANDED_PRIVACY_AUTO_NOTICE, "info");
+    return;
+  }
+
+  resolvingBrandedConflict = true;
+  commercialBrand.checked = false;
+  updateCommercialPrompt();
+  updateConsentText();
+  resolvingBrandedConflict = false;
+  setStatus(BRANDED_PRIVACY_UNAVAILABLE_NOTICE, "error");
+}
+
+function enforceCommercialSelectionRequirement() {
+  if (!commercialToggle) {
+    return true;
+  }
+  const requiresSelection = commercialToggle.checked;
+  const selfChecked = !!(commercialSelf && commercialSelf.checked);
+  const brandChecked = !!(commercialBrand && commercialBrand.checked);
+  const blocked = requiresSelection && !(selfChecked || brandChecked);
+  setCommercialRequirementBlocked(blocked);
+  return !blocked;
+}
+
+function stopStatusPolling() {
+  if (publishStatusInterval) {
+    clearInterval(publishStatusInterval);
+    publishStatusInterval = null;
+  }
+}
+
+function updateStatusCopy(message) {
+  if (postingNoticeEl) {
+    postingNoticeEl.textContent = message;
+  }
+}
+
+async function pollPublishStatus(publishId) {
+  try {
+    const response = await callBackend(
+      `/status/latest${publishId ? `?publish_id=${encodeURIComponent(publishId)}` : ""}`
+    );
+    if (response && response.status) {
+      const state =
+        response.status.data?.status ||
+        response.status.data?.status_msg ||
+        response.status.data?.status_code;
+      if (state) {
+        updateStatusCopy(`TikTok processing status: ${state}.`);
+      }
+      const normalized = (state || "").toUpperCase();
+      if (["SUCCESS", "PUBLISHED", "FINISHED"].includes(normalized)) {
+        stopStatusPolling();
+      }
+    }
+  } catch (err) {
+    console.error("Status polling failed:", err);
+  }
+}
+
+function startStatusPolling(publishId) {
+  if (!publishId) {
+    return;
+  }
+  stopStatusPolling();
+  pollPublishStatus(publishId);
+  publishStatusInterval = setInterval(() => pollPublishStatus(publishId), 5000);
 }
 
 function updateCommercialUI() {
   const enabled = commercialToggle.checked;
-  commercialOptions.hidden = !enabled;
-  commercialAlert.textContent = "";
+  if (commercialOptions) {
+    commercialOptions.hidden = !enabled;
+  }
+  if (commercialAlert) {
+    commercialAlert.textContent = "";
+  }
   if (!enabled) {
-    commercialSelf.checked = false;
-    commercialBrand.checked = false;
+    if (commercialSelf) {
+      commercialSelf.checked = false;
+    }
+    if (commercialBrand) {
+      commercialBrand.checked = false;
+    }
+    if (commercialPrompt) {
+      commercialPrompt.textContent = "";
+    }
   }
   updateConsentText();
+  updateCommercialPrompt();
 }
 
 function validateCommercialSelection() {
+  enforceCommercialSelectionRequirement();
   if (!commercialToggle.checked) {
     return true;
   }
-  const anySelected = commercialSelf.checked || commercialBrand.checked;
+  const anySelected =
+    (commercialSelf && commercialSelf.checked) ||
+    (commercialBrand && commercialBrand.checked);
   if (!anySelected) {
-    commercialAlert.textContent =
-      "Select whether you're promoting yourself, another brand, or both.";
+    if (commercialAlert) {
+      commercialAlert.textContent =
+        "Select whether you're promoting yourself, another brand, or both.";
+    }
     return false;
   }
-  commercialAlert.textContent = "";
+  if (commercialAlert) {
+    commercialAlert.textContent = "";
+  }
   return true;
 }
 
@@ -190,9 +402,33 @@ async function loadPreview(force = false) {
         Size: ${formatBytes(data.size)}<br>
         Last modified: ${new Date(data.modified * 1000).toLocaleString()}
       `;
+      if (reviewConsentCheckbox) {
+        reviewConsentCheckbox.checked = false;
+      }
+      if (previewVideo && sessionToken) {
+        const cacheBreaker = Date.now();
+        const sourceUrl = `${BACKEND_URL}/preview/source?session_token=${encodeURIComponent(
+          sessionToken
+        )}&t=${cacheBreaker}`;
+        previewVideo.classList.remove("ready");
+        previewVideo.src = sourceUrl;
+        previewVideo.load();
+        previewVideo.onloadeddata = () => {
+          previewVideo.classList.add("ready");
+          if (previewFallback) {
+            previewFallback.classList.add("hidden");
+          }
+        };
+      }
+      if (previewFallback) {
+        previewFallback.classList.add("hidden");
+      }
     }
   } catch (err) {
     console.warn("Preview unavailable:", err);
+    if (previewFallback) {
+      previewFallback.classList.remove("hidden");
+    }
   }
 }
 
@@ -362,10 +598,16 @@ if (commercialToggle) {
   commercialToggle.addEventListener("change", updateCommercialUI);
 }
 if (commercialSelf) {
-  commercialSelf.addEventListener("change", updateConsentText);
+  commercialSelf.addEventListener("change", () => {
+    updateConsentText();
+    updateCommercialPrompt();
+  });
 }
 if (commercialBrand) {
-  commercialBrand.addEventListener("change", updateConsentText);
+  commercialBrand.addEventListener("change", () => {
+    updateConsentText();
+    updateCommercialPrompt();
+  });
 }
 if (privacySelect) {
   privacySelect.addEventListener("change", (event) => {
@@ -423,6 +665,14 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
       musicConsentCheckbox.focus();
       return;
     }
+    if (reviewConsentCheckbox && !reviewConsentCheckbox.checked) {
+      setStatus(
+        "Please confirm you reviewed the preview before uploading.",
+        "error"
+      );
+      reviewConsentCheckbox.focus();
+      return;
+    }
     if (creatorInfo && creatorInfo.can_post === false) {
       setStatus(
         "TikTok is currently preventing uploads for this account. Please try again later.",
@@ -470,7 +720,12 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
       },
     });
     console.log("Upload result:", data);
+    const publishId = data?.publish_id;
     setStatus("Upload requested. Check TikTok for processing status.");
+    updateStatusCopy("Waiting for TikTok to finish processing this upload...");
+    if (publishId) {
+      startStatusPolling(publishId);
+    }
     if (workflowPanel) workflowPanel.hidden = true;
     if (successPanel) successPanel.hidden = false;
   } catch (err) {
@@ -479,9 +734,12 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
       return;
     }
     setStatus(`Upload failed: ${err.message}`, "error");
+    stopStatusPolling();
     if (workflowPanel) workflowPanel.hidden = false;
     if (successPanel) successPanel.hidden = true;
   }
 });
 
+updateConsentText();
+enforceCommercialSelectionRequirement();
 refreshAuthStatus();
