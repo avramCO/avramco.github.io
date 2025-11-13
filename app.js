@@ -7,6 +7,7 @@ const creatorSection = document.getElementById("creatorSection");
 const creatorNicknameEl = document.getElementById("creatorNickname");
 const creatorAccountMetaEl = document.getElementById("creatorAccountMeta");
 const privacyOptionList = document.getElementById("privacyOptionList");
+const privacyDisclaimer = document.getElementById("privacyDisclaimer");
 const allowCommentsBox = document.getElementById("allowComments");
 const allowDuetBox = document.getElementById("allowDuet");
 const allowStitchBox = document.getElementById("allowStitch");
@@ -15,8 +16,18 @@ const musicConsentCheckbox = document.getElementById("musicConsent");
 const postingNoticeEl = document.getElementById("postingNotice");
 const FORCED_VISIBILITY = "private";
 const uploadBtn = document.getElementById("uploadBtn");
+const previewSection = document.getElementById("previewSection");
+const previewDetails = document.getElementById("previewDetails");
+const refreshPreviewBtn = document.getElementById("refreshPreview");
+const commercialToggle = document.getElementById("commercialToggle");
+const commercialOptions = document.getElementById("commercialOptions");
+const commercialSelf = document.getElementById("commercialSelf");
+const commercialBrand = document.getElementById("commercialBrand");
+const commercialAlert = document.getElementById("commercialAlert");
+const consentText = document.getElementById("consentText");
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 let creatorInfo = null;
+let selectedPrivacy = null;
 
 function setStatus(message, type = "info") {
   statusEl.textContent = message;
@@ -51,6 +62,111 @@ function applyInteractionControl(checkbox, serverValue) {
   }
 }
 
+function formatBytes(bytes) {
+  if (!bytes && bytes !== 0) return "Unknown size";
+  const units = ["B", "KB", "MB", "GB"];
+  let size = bytes;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+  return `${size.toFixed(1)} ${units[unitIndex]}`;
+}
+
+function renderPrivacyOptions(options) {
+  privacyOptionList.innerHTML = "";
+  selectedPrivacy = null;
+  const disclaimer = [];
+  if (options && options.length) {
+    disclaimer.push("Select one of the options TikTok allows for your account.");
+  }
+  if (!options.includes("private")) {
+    options = [...options, "private"];
+  }
+  privacyDisclaimer.textContent =
+    disclaimer.join(" ") ||
+    "TikTok currently restricts this integration to private uploads.";
+  options.forEach((option) => {
+    const li = document.createElement("li");
+    const label = document.createElement("label");
+    label.className = "privacy-option";
+    if (option !== FORCED_VISIBILITY) {
+      label.classList.add("disabled");
+    }
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "privacyChoice";
+    input.value = option;
+    input.disabled = option !== FORCED_VISIBILITY;
+    input.addEventListener("change", () => {
+      selectedPrivacy = option;
+    });
+    label.appendChild(input);
+    const text = document.createElement("span");
+    text.textContent = option === "private" ? "Private (Only me)" : option;
+    label.appendChild(text);
+    li.appendChild(label);
+    privacyOptionList.appendChild(li);
+  });
+}
+
+function updateConsentText() {
+  let message = "By posting, you agree to TikTok's Music Usage Confirmation.";
+  if (commercialToggle.checked && commercialBrand.checked) {
+    message =
+      "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation.";
+  } else if (commercialToggle.checked && commercialSelf.checked) {
+    message =
+      "By posting, you agree to TikTok's Music Usage Confirmation.";
+  }
+  consentText.textContent = message;
+}
+
+function updateCommercialUI() {
+  const enabled = commercialToggle.checked;
+  commercialOptions.hidden = !enabled;
+  commercialAlert.textContent = "";
+  if (!enabled) {
+    commercialSelf.checked = false;
+    commercialBrand.checked = false;
+  }
+  updateConsentText();
+}
+
+function validateCommercialSelection() {
+  if (!commercialToggle.checked) {
+    return true;
+  }
+  const anySelected = commercialSelf.checked || commercialBrand.checked;
+  if (!anySelected) {
+    commercialAlert.textContent =
+      "Select whether you're promoting yourself, another brand, or both.";
+    return false;
+  }
+  commercialAlert.textContent = "";
+  return true;
+}
+
+async function loadPreview(force = false) {
+  if (!sessionToken) {
+    return;
+  }
+  try {
+    const data = await callBackend(`/preview${force ? "?force=1" : ""}`);
+    if (data && data.filename) {
+      previewSection.hidden = false;
+      previewDetails.innerHTML = `
+        <strong>${data.filename}</strong><br>
+        Size: ${formatBytes(data.size)}<br>
+        Last modified: ${new Date(data.modified * 1000).toLocaleString()}
+      `;
+    }
+  } catch (err) {
+    console.warn("Preview unavailable:", err);
+  }
+}
+
 function renderCreatorInfo(response) {
   if (!response) {
     return;
@@ -75,14 +191,7 @@ function renderCreatorInfo(response) {
       ? response.privacy_options
       : [FORCED_VISIBILITY]);
   privacyOptionList.innerHTML = "";
-  privacyOptions.forEach((option) => {
-    const li = document.createElement("li");
-    li.textContent = option;
-    if (option !== "private") {
-      li.classList.add("disabled");
-    }
-    privacyOptionList.appendChild(li);
-  });
+  renderPrivacyOptions(privacyOptions);
 
   const interactions = response.interaction_settings || {};
   applyInteractionControl(allowCommentsBox, interactions.comments);
@@ -223,6 +332,20 @@ if (refreshCreatorInfoBtn) {
   );
 }
 
+if (refreshPreviewBtn) {
+  refreshPreviewBtn.addEventListener("click", () => loadPreview(true));
+}
+
+if (commercialToggle) {
+  commercialToggle.addEventListener("change", updateCommercialUI);
+}
+if (commercialSelf) {
+  commercialSelf.addEventListener("change", updateConsentText);
+}
+if (commercialBrand) {
+  commercialBrand.addEventListener("change", updateConsentText);
+}
+
 document.getElementById("generateBtn").addEventListener("click", async () => {
   setStatus("Selecting a random video...");
   try {
@@ -232,6 +355,7 @@ document.getElementById("generateBtn").addEventListener("click", async () => {
     }
     const data = await callBackend("/generate", { method: "POST" });
     console.log("Video generated:", data);
+    await loadPreview(true);
     setStatus(
       `Selected video: ${data && data.filename ? data.filename : "unknown file"}`
     );
@@ -272,12 +396,35 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
       titleInput.focus();
       return;
     }
+    if (!selectedPrivacy) {
+      setStatus("Please select a privacy option provided by TikTok.", "error");
+      return;
+    }
+    if (selectedPrivacy !== FORCED_VISIBILITY) {
+      setStatus(
+        "This sandbox can only upload with private visibility until TikTok approves the app.",
+        "error"
+      );
+      return;
+    }
+    if (!validateCommercialSelection()) {
+      setStatus("Complete the commercial disclosure section.", "error");
+      return;
+    }
 
     const data = await callBackend("/upload", {
       method: "POST",
       body: {
         title,
-        visibility: FORCED_VISIBILITY,
+        visibility: selectedPrivacy,
+        allow_comments: allowCommentsBox?.checked ?? false,
+        allow_duet: allowDuetBox?.checked ?? false,
+        allow_stitch: allowStitchBox?.checked ?? false,
+        commercial: {
+          enabled: commercialToggle?.checked ?? false,
+          your_brand: commercialSelf?.checked ?? false,
+          branded_content: commercialBrand?.checked ?? false,
+        },
       },
     });
     console.log("Upload result:", data);
