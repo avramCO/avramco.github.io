@@ -31,7 +31,7 @@ const workflowPanel = document.getElementById("workflowPanel");
 const successPanel = document.getElementById("successPanel");
 const homeBtn = document.getElementById("homeBtn");
 const privateAccountConfirm = document.getElementById("privateAccountConfirm");
-const reviewConsentCheckbox = document.getElementById("reviewConsent");
+const statusHeading = document.getElementById("statusHeading");
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 let creatorInfo = null;
 let selectedPrivacy = null;
@@ -140,6 +140,15 @@ function formatPrivacyLabel(option) {
       "SELF_ONLY: Used in sandbox mode; content is restricted to the creator and not visible to others.",
   };
   return labels[normalized] || option.replace(/_/g, " ");
+}
+
+function setVideoReadyHeading(ready) {
+  if (!statusHeading) {
+    return;
+  }
+  statusHeading.textContent = ready
+    ? "Your video is ready!"
+    : "Select a video to get started";
 }
 
 function renderPrivacyOptions(options) {
@@ -406,9 +415,7 @@ async function loadPreview(force = false) {
         Size: ${formatBytes(data.size)}<br>
         Last modified: ${new Date(data.modified * 1000).toLocaleString()}
       `;
-      if (reviewConsentCheckbox) {
-        reviewConsentCheckbox.checked = false;
-      }
+      setVideoReadyHeading(true);
       if (previewVideo && sessionToken) {
         const cacheBreaker = Date.now();
         const sourceUrl = `${BACKEND_URL}/preview/source?session_token=${encodeURIComponent(
@@ -430,6 +437,7 @@ async function loadPreview(force = false) {
     }
   } catch (err) {
     console.warn("Preview unavailable:", err);
+    setVideoReadyHeading(false);
     if (previewFallback) {
       previewFallback.classList.remove("hidden");
     }
@@ -521,6 +529,7 @@ setUploadAvailability(
     ? "Uploads are currently limited to TikTok's 'Self Only' visibility."
     : "Log in with TikTok to enable uploads."
 );
+setVideoReadyHeading(false);
 if (successPanel) successPanel.hidden = true;
 if (workflowPanel) workflowPanel.hidden = false;
 
@@ -667,14 +676,6 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
         "error"
       );
       musicConsentCheckbox.focus();
-      return;
-    }
-    if (reviewConsentCheckbox && !reviewConsentCheckbox.checked) {
-      setStatus(
-        "Please confirm you reviewed the preview before uploading.",
-        "error"
-      );
-      reviewConsentCheckbox.focus();
       return;
     }
     if (creatorInfo && creatorInfo.can_post === false) {
