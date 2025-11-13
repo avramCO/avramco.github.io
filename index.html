@@ -10,6 +10,12 @@
     #status { margin-top: 1.5rem; font-weight: bold; }
     label { display: block; margin-top: 1rem; }
     input, select { padding: 0.5rem; margin-top: 0.25rem; width: 300px; }
+    section { border: 1px solid #ddd; padding: 1rem; margin-top: 1.5rem; border-radius: 8px; background: #fafafa; }
+    #privacyOptionList { padding-left: 1.25rem; }
+    .interaction-option { display: block; margin-top: 0.5rem; }
+    .interaction-option.disabled { color: #777; }
+    .consent { margin-top: 1.5rem; font-weight: 600; }
+    .notice { margin-top: 1rem; color: #444; }
   </style>
 </head>
 <body>
@@ -27,9 +33,46 @@
     >
   </label>
 
+  <section id="creatorSection" hidden>
+    <h2>Posting as <span id="creatorNickname">...</span></h2>
+    <p id="creatorAccountMeta"></p>
+    <button id="refreshCreatorInfo" type="button">Refresh TikTok account info</button>
+
+    <div id="privacyOptionsArea">
+      <h3>Privacy options returned by TikTok</h3>
+      <ul id="privacyOptionList"></ul>
+    </div>
+
+    <div id="interactionControls">
+      <h3>Interactions (all off by default)</h3>
+      <label class="interaction-option">
+        <input type="checkbox" id="allowComments">
+        Allow comments
+      </label>
+      <label class="interaction-option">
+        <input type="checkbox" id="allowDuet">
+        Allow duet
+      </label>
+      <label class="interaction-option">
+        <input type="checkbox" id="allowStitch">
+        Allow stitch
+      </label>
+    </div>
+  </section>
+
+  <label class="consent">
+    <input type="checkbox" id="musicConsent">
+    By posting, you agree to TikTok's Music Usage Confirmation.
+  </label>
+
   <button id="loginBtn">Login with TikTok</button>
   <button id="generateBtn">Generate Video</button>
   <button id="uploadBtn">Upload Video</button>
+
+  <p id="postingNotice" class="notice"></p>
+  <p class="notice">
+    After uploading, TikTok may take a few minutes to process your video. Check TikTok for final status.
+  </p>
 
   <div id="status">Ready.</div>
 
