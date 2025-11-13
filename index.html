@@ -221,9 +221,58 @@
       font-size: 1.1rem;
       color: rgba(255,255,255,0.8);
     }
+    .toast {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: rgba(111, 255, 186, 0.15);
+      border: 1px solid rgba(111, 255, 186, 0.4);
+      color: #dfffe9;
+      padding: 0.75rem 1.25rem;
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      z-index: 10;
+    }
+    .creator-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .creator-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    .preview-visual {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 16px;
+      background: radial-gradient(circle at 20% 20%, #4338ca, transparent 55%), rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .preview-orb {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #c26dff, #6a5bff);
+      box-shadow: 0 12px 40px rgba(98, 60, 255, 0.5);
+    }
+    .preview-label {
+      margin: 0;
+      font-weight: 600;
+      color: var(--text);
+    }
   </style>
 </head>
 <body>
+  <div id="loginToast" class="toast" hidden>Successfully logged in</div>
+
   <main id="workflowPanel" class="panel split">
     <section class="panel-left">
       <div class="panel-card highlight">
@@ -238,6 +287,12 @@
 
       <section id="previewSection" class="panel-card" hidden>
         <h3>Video preview</h3>
+        <div id="previewVisual" class="preview-visual" hidden>
+          <div class="preview-orb"></div>
+          <div>
+            <p class="preview-label" id="previewVisualLabel">Waiting for video…</p>
+          </div>
+        </div>
         <div id="previewDetails">Generate or select a video to see preview information.</div>
         <button class="chip" id="refreshPreview" type="button">Refresh preview</button>
       </section>
@@ -279,7 +334,6 @@
         <button id="loginBtn" class="primary outlined full">Login with TikTok</button>
         <button id="generateBtn" class="primary ghost full">Generate Video</button>
         <button id="uploadBtn" class="primary solid full">Upload Video</button>
-        <button id="homeBtn" class="primary outlined full">Return to homepage</button>
       </div>
 
       <div class="status-area">
@@ -291,8 +345,13 @@
 
     <section class="panel-right">
       <section id="creatorSection" class="panel-card" hidden>
-        <div class="subhead">Posting as <span id="creatorNickname">...</span></div>
-        <p id="creatorAccountMeta"></p>
+        <div class="creator-header">
+          <img id="creatorAvatar" class="creator-avatar" alt="TikTok avatar" hidden>
+          <div>
+            <div class="subhead">Posting as <span id="creatorNickname">...</span></div>
+            <p id="creatorAccountMeta"></p>
+          </div>
+        </div>
         <button class="chip" id="refreshCreatorInfo" type="button">Refresh TikTok account info</button>
         <div id="privacyOptionsArea" class="stack">
           <h3>Privacy options from TikTok</h3>
@@ -333,7 +392,7 @@
   <section id="successPanel" class="panel success-panel" hidden>
     <h1>Upload to TikTok successfully initiated</h1>
     <p>Please allow a few minutes for TikTok to finish processing. Once complete, you can view the video on your channel’s private tab.</p>
-    <button id="homeBtn" class="primary solid">Return to homepage</button>
+    <button id="successHomeBtn" class="primary solid">Return to homepage</button>
   </section>
 
   <script src="config.js"></script>
