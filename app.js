@@ -157,8 +157,12 @@ function renderPrivacyOptions(options) {
   placeholder.hidden = true;
   privacySelect.appendChild(placeholder);
 
-  const normalizedSet = new Set(optionsArray.map((opt) => opt.toUpperCase()));
   const hasApiOptions = optionsArray.length > 0;
+  const normalizedSet = new Set(
+    (hasApiOptions ? optionsArray : ORDERED_PRIVACY_VALUES).map((opt) =>
+      opt.toUpperCase()
+    )
+  );
 
   ORDERED_PRIVACY_VALUES.forEach((option) => {
     const opt = document.createElement("option");
@@ -174,7 +178,7 @@ function renderPrivacyOptions(options) {
     privacySelect.appendChild(opt);
   });
 
-  privacySelect.disabled = !hasApiOptions;
+  privacySelect.disabled = false;
   selectedPrivacy = null;
   privacySelect.value = "";
 
