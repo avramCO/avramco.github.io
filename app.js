@@ -1,4 +1,5 @@
-const BACKEND_URL = "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
+const BACKEND_URL =
+  window.BACKEND_URL || "https://unspecialized-nonprotractile-sommer.ngrok-free.dev";
 const statusEl = document.getElementById("status");
 
 function setStatus(message, type = "info") {
