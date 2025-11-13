@@ -102,6 +102,10 @@ function renderPrivacyOptions(options) {
     input.addEventListener("change", () => {
       selectedPrivacy = option;
     });
+    if (!selectedPrivacy && option === FORCED_VISIBILITY) {
+      input.checked = true;
+      selectedPrivacy = option;
+    }
     label.appendChild(input);
     const text = document.createElement("span");
     text.textContent = option === "private" ? "Private (Only me)" : option;
