@@ -49,7 +49,9 @@ document.getElementById("generateBtn").addEventListener("click", async () => {
   try {
     const data = await callBackend("/generate", { method: "POST" });
     console.log("Video generated:", data);
-    setStatus(`Video generated (${data.filename || "generated.mp4"}).`);
+    setStatus(
+      `Selected video: ${data && data.filename ? data.filename : "unknown file"}`
+    );
   } catch (err) {
     console.error(err);
     setStatus(`Generation failed: ${err.message}`, "error");
@@ -61,7 +63,6 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
   try {
     const data = await callBackend("/upload", {
       method: "POST",
-      body: { path: "generated.mp4" },
     });
     console.log("Upload result:", data);
     setStatus("Upload requested. Check TikTok for processing status.");
