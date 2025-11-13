@@ -221,45 +221,9 @@
       font-size: 1.1rem;
       color: rgba(255,255,255,0.8);
     }
-    .creator-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .creator-avatar {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid rgba(255,255,255,0.28);
-    }
-    .preview-visual {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      border-radius: 18px;
-      background: radial-gradient(circle at 15% 20%, #5c4ddb, transparent 50%), rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    #previewVideo {
-      width: 140px;
-      height: 120px;
-      border-radius: 14px;
-      object-fit: cover;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .preview-label {
-      margin: 0;
-      font-weight: 600;
-      color: var(--text);
-    }
   </style>
 </head>
 <body>
-  <div id="loginToast" class="toast" hidden>Successfully logged in</div>
-
   <main id="workflowPanel" class="panel split">
     <section class="panel-left">
       <div class="panel-card highlight">
@@ -274,13 +238,6 @@
 
       <section id="previewSection" class="panel-card" hidden>
         <h3>Video preview</h3>
-        <div id="previewVisual" class="preview-visual" hidden>
-          <video id="previewVideo" playsinline muted loop controls hidden></video>
-          <div>
-            <p id="previewVideoLabel" class="preview-label">Waiting for preview…</p>
-            <small id="previewVideoMeta" class="notice"></small>
-          </div>
-        </div>
         <div id="previewDetails">Generate or select a video to see preview information.</div>
         <button class="chip" id="refreshPreview" type="button">Refresh preview</button>
       </section>
@@ -334,13 +291,8 @@
 
     <section class="panel-right">
       <section id="creatorSection" class="panel-card" hidden>
-        <div class="creator-header">
-          <img id="creatorAvatar" class="creator-avatar" alt="TikTok avatar" hidden>
-          <div>
-            <div class="subhead">Posting as <span id="creatorNickname">...</span></div>
-            <p id="creatorAccountMeta"></p>
-          </div>
-        </div>
+        <div class="subhead">Posting as <span id="creatorNickname">...</span></div>
+        <p id="creatorAccountMeta"></p>
         <button class="chip" id="refreshCreatorInfo" type="button">Refresh TikTok account info</button>
         <div id="privacyOptionsArea" class="stack">
           <h3>Privacy options from TikTok</h3>
@@ -386,108 +338,5 @@
 
   <script src="config.js"></script>
   <script src="app.js"></script>
-  <script>
-    (function () {
-      const toast = document.getElementById("loginToast");
-      const workflowPanel = document.getElementById("workflowPanel");
-      const successPanel = document.getElementById("successPanel");
-      const successHomeBtn = document.getElementById("successHomeBtn");
-      const previewSection = document.getElementById("previewSection");
-      const previewVisual = document.getElementById("previewVisual");
-      const previewVideo = document.getElementById("previewVideo");
-      const previewVideoLabel = document.getElementById("previewVideoLabel");
-      const previewVideoMeta = document.getElementById("previewVideoMeta");
-      const previewDetailsEl = document.getElementById("previewDetails");
-      const creatorAvatar = document.getElementById("creatorAvatar");
-      let toastTimer;
-
-      function showToast() {
-        if (!toast) return;
-        toast.hidden = false;
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => (toast.hidden = true), 2200);
-      }
-
-      const originalSetStatus = window.setStatus;
-      window.setStatus = function (message, type) {
-        if (typeof originalSetStatus === "function") {
-          originalSetStatus.call(this, message, type);
-        }
-        if (message === "Logged in with TikTok.") {
-          showToast();
-        }
-        if (message && message.startsWith("Upload requested")) {
-          if (workflowPanel) workflowPanel.hidden = true;
-          if (successPanel) successPanel.hidden = false;
-          setTimeout(() => {
-            window.location.href = "https://avramco.github.io/success_upload.html";
-          }, 1200);
-        }
-        if (message && message.startsWith("Upload failed")) {
-          if (workflowPanel) workflowPanel.hidden = false;
-          if (successPanel) successPanel.hidden = true;
-        }
-      };
-
-      const originalRenderCreatorInfo = window.renderCreatorInfo;
-      if (typeof originalRenderCreatorInfo === "function") {
-        window.renderCreatorInfo = function (resp) {
-          const result = originalRenderCreatorInfo.call(this, resp);
-          if (resp && creatorAvatar) {
-            const info = resp.creator_info || {};
-            const avatarUrl =
-              info.avatar_url || info.avatar || info.profile_image || resp.avatar_url;
-            if (avatarUrl) {
-              creatorAvatar.src = avatarUrl;
-              creatorAvatar.hidden = false;
-            } else {
-              creatorAvatar.hidden = true;
-            }
-          }
-          return result;
-        };
-      }
-
-      window.loadPreview = async function (force = false) {
-        if (!window.sessionToken) return;
-        try {
-          const data = await callBackend(`/preview${force ? "?force=1" : ""}`);
-          if (data && data.filename) {
-            previewSection.hidden = false;
-            if (previewVisual) {
-              previewVisual.hidden = false;
-              if (previewVideoLabel) previewVideoLabel.textContent = data.filename;
-              if (previewVideoMeta)
-                previewVideoMeta.textContent = data.size
-                  ? `${formatBytes(data.size)}`
-                  : "";
-              if (previewVideo && data.url) {
-                previewVideo.hidden = false;
-                previewVideo.src = data.url;
-                previewVideo.load();
-              } else if (previewVideo) {
-                previewVideo.hidden = true;
-              }
-            }
-            if (previewDetailsEl) {
-              previewDetailsEl.innerHTML = `
-              <strong>${data.filename}</strong><br>
-              Size: ${formatBytes(data.size || 0)}<br>
-              Last modified: ${new Date((data.modified || 0) * 1000).toLocaleString()}
-            `;
-            }
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      };
-
-      if (successHomeBtn) {
-        successHomeBtn.addEventListener("click", () => {
-          window.location.href = "https://avramco.github.io/";
-        });
-      }
-    })();
-  </script>
 </body>
 </html>
