@@ -9,12 +9,19 @@
     :root {
       --bg-dark: #05030a;
       --text: #f6f5ff;
-      --muted: rgba(246, 245, 255, 0.7);
+      --muted: rgba(246, 245, 255, 0.75);
+      --panel-bg: rgba(18, 12, 30, 0.85);
+      --border: rgba(255, 255, 255, 0.12);
+      --card: rgba(20, 14, 34, 0.9);
       --accent: linear-gradient(90deg, #6a5bff, #c26dff);
-      --panel-bg: rgba(16, 11, 24, 0.75);
-      --border: rgba(255, 255, 255, 0.08);
+      --pill: rgba(255, 255, 255, 0.08);
+      --blue: #30c1ff;
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Space Grotesk', sans-serif;
       min-height: 100vh;
@@ -26,323 +33,618 @@
                   #05030a;
       padding: 2rem;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2rem;
+      justify-content: center;
     }
-    h1, h2, h3 {
-      margin: 0;
-      font-weight: 600;
-    }
-    p {
-      color: var(--muted);
-      line-height: 1.6;
-    }
-    .hero {
-      text-align: center;
-      max-width: 720px;
-      margin-top: 1rem;
+
+    .app-shell {
+      width: min(1280px, 100%);
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
     }
-    .hero-pill {
-      display: inline-flex;
-      align-self: center;
-      padding: 0.35rem 1rem;
-      border-radius: 999px;
+
+    .status-banner {
+      background: var(--panel-bg);
       border: 1px solid var(--border);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      font-size: 0.78rem;
-    }
-    .hero h1 {
-      font-size: clamp(2.5rem, 6vw, 3.8rem);
-      letter-spacing: -0.02em;
-    }
-    .hero-buttons {
+      border-radius: 20px;
+      padding: 1.5rem 2rem;
       display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .status-copy {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #50f18a;
+      box-shadow: 0 0 12px rgba(80, 241, 138, 0.8);
+    }
+
+    .status-text h1 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+
+    .status-text p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .banner-actions {
+      display: flex;
       gap: 0.75rem;
     }
+
     button {
       border: none;
       border-radius: 999px;
-      padding: 0.9rem 1.9rem;
+      padding: 0.85rem 1.7rem;
       font-weight: 600;
       font-size: 0.95rem;
       cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+
     button:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
     }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
     .primary.solid {
       background: var(--accent);
       color: #0b0415;
     }
+
     .primary.outlined {
       background: transparent;
       color: var(--text);
       border: 1px solid var(--border);
     }
+
     .primary.ghost {
-      background: rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.1);
       color: var(--text);
     }
-    .panel {
-      width: min(1200px, 100%);
-      background: rgba(5, 3, 10, 0.65);
-      border: 1px solid var(--border);
-      border-radius: 32px;
-      padding: 2.5rem;
-      box-shadow: 0 40px 120px rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(26px);
-    }
-    .panel.split {
+
+    .studio-layout {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 2rem;
-    }
-    .panel-left,
-    .panel-right {
-      display: flex;
-      flex-direction: column;
+      grid-template-columns: 1.1fr 1fr 0.8fr;
       gap: 1.5rem;
     }
-    .panel-card {
+
+    .card {
       background: var(--panel-bg);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 1.5rem;
+      border-radius: 26px;
+      padding: 1.75rem;
       display: flex;
       flex-direction: column;
+      gap: 1.25rem;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .preview-panel {
       gap: 1rem;
     }
-    input[type="text"], input[type="checkbox"], input[type="radio"] {
-      accent-color: #7c5dff;
+
+    .preview-frame {
+      background: rgba(0,0,0,0.35);
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
     }
-    input[type="text"] {
+
+    .preview-video {
+      position: relative;
+      height: 420px;
+      background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.08), transparent 60%),
+                  rgba(10, 7, 18, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .preview-video video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .preview-video video.ready {
+      display: block;
+    }
+
+    .preview-placeholder {
+      text-align: center;
+      color: var(--muted);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: rgba(5, 3, 10, 0.25);
+    }
+
+    .preview-placeholder.hidden {
+      display: none;
+    }
+
+    .preview-placeholder .play-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.18);
+      margin-bottom: 0.75rem;
+    }
+
+    .preview-timeline {
+      height: 6px;
       background: rgba(255,255,255,0.08);
+    }
+
+    .preview-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .preview-details {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .chip {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      font-size: 0.85rem;
+      padding: 0.5rem 1.25rem;
+      cursor: pointer;
+    }
+
+    .upload-panel h2 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .panel-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .creator-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .creator-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .subhead {
+      color: var(--muted);
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field-group label {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    input[type="text"] {
+      background: rgba(255,255,255,0.07);
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 0.9rem 1rem;
       font-size: 1rem;
       color: var(--text);
     }
-    .field-label { font-size: 0.95rem; color: var(--muted); margin-bottom: 0.5rem; display: block; }
-    .privacy-select {
-      width: 100%;
-      background: rgba(255,255,255,0.08);
+
+    select {
+      background: rgba(255,255,255,0.07);
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 0.85rem 1rem;
+      color: var(--text);
       font-size: 1rem;
-      color: var(--text);
-      appearance: none;
     }
-    .privacy-select:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .interaction-option { color: var(--muted); }
-    .interaction-option input { width: auto; }
-    .chip {
-      align-self: flex-start;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid var(--border);
-      color: var(--text);
+
+    .privacy-hint {
       font-size: 0.85rem;
-      padding: 0.45rem 1.25rem;
-      border-radius: 999px;
+      color: var(--muted);
+      margin: 0;
     }
-    .stack h3 { margin: 0; }
-    .panel-card-row {
+
+    .interaction-row {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
       gap: 1rem;
+      flex-wrap: wrap;
     }
-    .notice { color: var(--muted); font-size: 0.9rem; margin: 0; }
-    .consent { display: flex; align-items: center; gap: 0.6rem; font-weight: 600; color: var(--text); }
-    .toggle { color: var(--text); }
-    .commercial-options label { color: var(--muted); }
-    .alert { color: #ff8585; font-size: 0.9rem; }
-    #status { margin-top: 1rem; font-weight: 600; color: var(--text); }
-    .status-area { margin-top: 2rem; }
-    .dualflex { display: flex; gap: 1rem; flex-wrap: wrap; }
-    .button-stack { display: flex; flex-direction: column; gap: 0.75rem; }
-    .full { width: 100%; }
+
+    .interaction-option {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--muted);
+    }
+
     .switch {
       position: relative;
       display: inline-block;
       width: 46px;
       height: 24px;
     }
-    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
     .slider {
       position: absolute;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(255,255,255,0.25);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255,255,255,0.15);
       transition: .3s;
       border-radius: 34px;
     }
+
     .slider:before {
       position: absolute;
       content: "";
-      height: 18px; width: 18px;
-      left: 4px; bottom: 3px;
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 3px;
       background-color: #05030a;
       border-radius: 50%;
       transition: .3s;
     }
+
     .switch input:checked + .slider {
       background: var(--accent);
     }
+
     .switch input:checked + .slider:before {
       transform: translateX(20px);
     }
-    .requirements {
-      list-style: none;
-      padding: 0;
+
+    .status-area {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    #status {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .upload-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .disclosure-panel h3 {
+      margin: 0;
+      font-size: 1.05rem;
+    }
+
+    .disclosure-panel .info-text {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .commercial-prompt {
+      margin: 0;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .alert {
+      color: #ff8585;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    .consent,
+    .toggle,
+    .commercial-options label {
+      color: var(--muted);
+    }
+
+    .consent {
+      display: flex;
+      gap: 0.65rem;
+      align-items: flex-start;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .policy-link {
+      color: #FE2C55;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .policy-link:hover {
+      text-decoration: underline;
+    }
+
+    ul.requirements {
+      padding-left: 1rem;
       margin: 0;
       color: var(--muted);
       line-height: 1.5;
     }
+
     .success-panel {
+      align-items: center;
       text-align: center;
-      gap: 1.5rem;
     }
+
     .success-panel h1 {
-      font-size: clamp(2rem, 4vw, 3rem);
-      color: #b5ffdc;
+      margin: 0;
+      font-size: 1.6rem;
       text-transform: uppercase;
+      color: #b5ffdc;
     }
+
     .success-panel p {
-      font-size: 1.1rem;
-      color: rgba(255,255,255,0.8);
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .requirements-card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.25rem;
+      background: rgba(255,255,255,0.02);
+    }
+
+    @media (max-width: 1100px) {
+      .studio-layout {
+        grid-template-columns: 1fr;
+      }
+      .status-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .banner-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .upload-actions {
+        justify-content: stretch;
+      }
+      .upload-actions button {
+        flex: 1;
+      }
     }
   </style>
 </head>
 <body>
-  <main id="workflowPanel" class="panel split">
-    <section class="panel-left">
-      <div class="panel-card highlight">
-        <span class="field-label">Video title • required by TikTok</span>
-        <input
-          id="videoTitle"
-          type="text"
-          placeholder="Random video from Hop2Top"
-          required
-        >
-      </div>
-
-      <section id="previewSection" class="panel-card" hidden>
-        <h3>Video preview</h3>
-        <div id="previewDetails">Generate or select a video to see preview information.</div>
-        <button class="chip" id="refreshPreview" type="button">Refresh preview</button>
-      </section>
-
-      <section id="commercialSection" class="panel-card">
-        <div class="panel-card-row">
-          <h3>Commercial disclosure</h3>
-          <label class="switch">
-            <input type="checkbox" id="commercialToggle">
-            <span class="slider"></span>
-          </label>
+  <div class="app-shell">
+    <header class="status-banner">
+      <div class="status-copy">
+        <span class="status-dot"></span>
+        <div class="status-text">
+          <p>Sandbox private-mode workflow</p>
+          <h1>Your video is ready!</h1>
         </div>
-        <p class="notice">TikTok requires you to disclose promotional content.</p>
-        <div id="commercialOptions" class="commercial-options" hidden>
-          <label>
-            <input type="checkbox" id="commercialSelf">
-            Your brand (self promotion)
-          </label>
-          <label>
-            <input type="checkbox" id="commercialBrand">
-            Branded content (third party)
-          </label>
-          <p id="commercialAlert" class="alert"></p>
+      </div>
+      <div class="banner-actions">
+        <button id="loginBtn" class="primary outlined">Login with TikTok</button>
+        <button id="generateBtn" class="primary ghost">Generate Video</button>
+      </div>
+    </header>
+
+    <main id="workflowPanel" class="studio-layout">
+      <section id="previewSection" class="card preview-panel" hidden>
+        <div class="preview-frame">
+          <div class="preview-video">
+            <video id="previewVideo" playsinline controls muted></video>
+            <div id="previewFallback" class="preview-placeholder">
+              <span class="play-icon">▶</span>
+              <p>Select or generate a video to see the preview.</p>
+            </div>
+          </div>
+          <div class="preview-timeline"></div>
+        </div>
+        <div class="preview-meta">
+          <div id="previewDetails" class="preview-details">
+            Generate or select a video to see file metadata.
+          </div>
+          <button class="chip" id="refreshPreview" type="button">Refresh preview</button>
         </div>
       </section>
 
-      <section class="panel-card" id="consentCard">
-        <label class="consent">
-          <input type="checkbox" id="musicConsent">
-          <span id="consentText">By posting, you agree to TikTok's Music Usage Confirmation.</span>
-        </label>
-        <label class="consent">
-          <input type="checkbox" id="Private (Self Only)AccountConfirm">
-          My TikTok profile is set to Private (Self Only) and visibility is “Only You”.
-        </label>
-      </section>
+      <section class="card upload-panel">
+        <div class="panel-heading">
+          <span class="panel-eyebrow">Upload to TikTok</span>
+          <h2>Review metadata & publish</h2>
+        </div>
 
-      <div class="button-stack">
-        <button id="loginBtn" class="primary outlined full">Login with TikTok</button>
-        <button id="generateBtn" class="primary ghost full">Generate Video</button>
-        <button id="uploadBtn" class="primary solid full">Upload Video</button>
-        <button id="homeBtn" class="primary outlined full">Return to homepage</button>
-      </div>
+        <section id="creatorSection" class="creator-card" hidden>
+          <div class="creator-meta">
+            <div>
+              <p class="subhead">Posting as</p>
+              <strong id="creatorNickname">...</strong>
+              <p id="creatorAccountMeta"></p>
+            </div>
+            <button class="chip" id="refreshCreatorInfo" type="button">Refresh info</button>
+          </div>
+        </section>
 
-      <div class="status-area">
-        <p id="postingNotice" class="notice"></p>
-        <p class="notice">After uploading, TikTok may take a few minutes to process your video. Check TikTok for final status.</p>
-        <div id="status">Ready.</div>
-      </div>
-    </section>
+        <div class="field-group">
+          <label for="videoTitle">Caption</label>
+          <input
+            id="videoTitle"
+            type="text"
+            placeholder="Add a title that describes your video"
+            required
+          >
+          <p class="privacy-hint">You can edit this text and remove any preset hashtags before publishing.</p>
+        </div>
 
-    <section class="panel-right">
-      <section id="creatorSection" class="panel-card" hidden>
-        <div class="subhead">Posting as <span id="creatorNickname">...</span></div>
-        <p id="creatorAccountMeta"></p>
-        <button class="chip" id="refreshCreatorInfo" type="button">Refresh TikTok account info</button>
-        <div id="privacyOptionsArea" class="stack">
-          <h3>Privacy status</h3>
-          <p id="privacyDisclaimer" class="notice"></p>
-          <label class="field-label" for="privacySelect">Select TikTok privacy level</label>
+        <div id="privacyOptionsArea" class="field-group">
+          <label for="privacySelect">Who can view this video</label>
           <select id="privacySelect" class="privacy-select" disabled>
             <option value="" disabled selected hidden>Select privacy status</option>
           </select>
+          <p id="privacyDisclaimer" class="privacy-hint"></p>
         </div>
-        <div id="interactionControls" class="stack dual">
-          <div>
-            <h4>Interaction toggles</h4>
+
+        <div id="interactionControls" class="field-group">
+          <label>Allow users to</label>
+          <div class="interaction-row">
             <label class="interaction-option">
               <input type="checkbox" id="allowComments">
-              Allow comments
+              Comment
             </label>
             <label class="interaction-option">
               <input type="checkbox" id="allowDuet">
-              Allow duet
+              Duet
             </label>
             <label class="interaction-option">
               <input type="checkbox" id="allowStitch">
-              Allow stitch
+              Stitch
             </label>
           </div>
         </div>
+
+        <div class="status-area">
+          <p id="postingNotice" class="notice"></p>
+          <p>After you finish publishing, TikTok may take a few minutes to process your video.</p>
+          <div id="status">Ready.</div>
+        </div>
+
+        <div class="upload-actions">
+          <button id="uploadBtn" class="primary solid">Upload Video</button>
+        </div>
       </section>
 
-      <section id="Private (Self Only)Requirement" class="panel-card">
-        <h3>Private (Self Only)-mode sandbox</h3>
-        <p>This demo works only with TikTok profiles set to Private (Self Only) and posts published as “Only You”. TikTok will reject any other combination until your app passes their Direct Post audit.</p>
-        <ul class="requirements">
-          <li>Switch your TikTok account to Private (Self Only).</li>
-          <li>Keep visibility locked to “Only You”.</li>
-          <li>Confirm Music Usage and disclosure policies.</li>
-        </ul>
+      <section class="card disclosure-panel">
+        <section id="commercialSection">
+          <div class="panel-card-row" style="justify-content: space-between; align-items:center;">
+            <div>
+              <h3>Disclose video content</h3>
+              <p class="info-text">
+                Turn on disclosure if this upload promotes goods or services.
+              </p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="commercialToggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div id="commercialOptions" class="commercial-options" hidden>
+            <label>
+              <input type="checkbox" id="commercialSelf">
+              <span>
+                <strong>Your brand</strong> · You are promoting yourself or your own business. This video will be classified as Brand Organic.
+              </span>
+            </label>
+            <label>
+              <input type="checkbox" id="commercialBrand">
+              <span>
+                <strong>Branded content</strong> · You are promoting another brand or third party. This video will be classified as Branded Content.
+              </span>
+            </label>
+            <p id="commercialPrompt" class="commercial-prompt" aria-live="polite"></p>
+            <p id="commercialAlert" class="alert"></p>
+          </div>
+        </section>
+
+        <section class="panel-card" id="consentCard" style="background: transparent; border:none; padding:0; gap:1rem;">
+          <label class="consent">
+            <input type="checkbox" id="reviewConsent">
+            I have reviewed the preview and authorize Hop2Top to upload this exact video to my TikTok account.
+          </label>
+          <label class="consent">
+            <input type="checkbox" id="musicConsent">
+            <span id="consentText">
+              By posting, you agree to TikTok's
+              <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" class="policy-link" target="_blank" rel="noopener noreferrer">Music Usage Confirmation</a>.
+            </span>
+          </label>
+          <label class="consent">
+            <input type="checkbox" id="privateAccountConfirm">
+            My TikTok profile is private and I will keep visibility set to “Only You”.
+          </label>
+        </section>
+
+        <section id="privateRequirement" class="requirements-card">
+          <h3>Private-mode sandbox</h3>
+          <p>This demo works only with TikTok profiles set to private and videos published as “Only You”.</p>
+          <ul class="requirements">
+            <li>Switch your TikTok account to Private.</li>
+            <li>Keep visibility locked to “Only You”.</li>
+            <li>Confirm Music Usage and disclosure policies.</li>
+          </ul>
+        </section>
       </section>
+    </main>
+
+    <section id="successPanel" class="card success-panel" hidden>
+      <h1>Upload initiated</h1>
+      <p>Please allow a few minutes for TikTok to finish processing. Once complete, you can view the video on your channel’s private tab.</p>
+      <button id="homeBtn" class="primary solid">Return to homepage</button>
     </section>
-  </main>
-
-  <section id="successPanel" class="panel success-panel" hidden>
-    <h1>Upload to TikTok successfully initiated</h1>
-    <p>Please allow a few minutes for TikTok to finish processing. Once complete, you can view the video on your channel’s Private (Self Only) tab.</p>
-    <button id="homeBtn" class="primary solid">Return to homepage</button>
-  </section>
+  </div>
 
   <script src="config.js"></script>
   <script src="app.js"></script>
