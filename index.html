@@ -431,18 +431,38 @@
     }
 
     .success-panel {
+      position: fixed;
+      inset: 0;
+      display: flex;
       align-items: center;
-      text-align: center;
+      justify-content: center;
+      background: rgba(5, 3, 10, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      padding: 2rem;
     }
 
-    .success-panel h1 {
+    .success-modal {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 2.5rem;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .success-modal h1 {
       margin: 0;
       font-size: 1.6rem;
       text-transform: uppercase;
       color: #b5ffdc;
     }
 
-    .success-panel p {
+    .success-modal p {
       color: var(--muted);
       margin: 0;
     }
@@ -482,8 +502,7 @@
       <div class="status-copy">
         <span class="status-dot"></span>
         <div class="status-text">
-          <p>Sandbox private-mode workflow</p>
-          <h1>Your video is ready!</h1>
+          <h1 id="statusHeading">Select a video to get started</h1>
         </div>
       </div>
       <div class="banner-actions">
@@ -611,10 +630,6 @@
 
         <section class="panel-card" id="consentCard" style="background: transparent; border:none; padding:0; gap:1rem;">
           <label class="consent">
-            <input type="checkbox" id="reviewConsent">
-            I have reviewed the preview and authorize Hop2Top to upload this exact video to my TikTok account.
-          </label>
-          <label class="consent">
             <input type="checkbox" id="musicConsent">
             <span id="consentText">
               By posting, you agree to TikTok's
@@ -639,10 +654,12 @@
       </section>
     </main>
 
-    <section id="successPanel" class="card success-panel" hidden>
-      <h1>Upload initiated</h1>
-      <p>Please allow a few minutes for TikTok to finish processing. Once complete, you can view the video on your channel’s private tab.</p>
-      <button id="homeBtn" class="primary solid">Return to homepage</button>
+    <section id="successPanel" class="success-panel" hidden>
+      <div class="success-modal">
+        <h1>Upload initiated</h1>
+        <p>Please allow a few minutes for TikTok to finish processing. Once complete, you can view the video on your channel’s private tab.</p>
+        <button id="homeBtn" class="primary solid">Return to homepage</button>
+      </div>
     </section>
   </div>
 
