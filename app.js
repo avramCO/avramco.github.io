@@ -6,7 +6,7 @@ const titleInput = document.getElementById("videoTitle");
 const creatorSection = document.getElementById("creatorSection");
 const creatorNicknameEl = document.getElementById("creatorNickname");
 const creatorAccountMetaEl = document.getElementById("creatorAccountMeta");
-const privacyOptionList = document.getElementById("privacyOptionList");
+const privacySelect = document.getElementById("privacySelect");
 const privacyDisclaimer = document.getElementById("privacyDisclaimer");
 const allowCommentsBox = document.getElementById("allowComments");
 const allowDuetBox = document.getElementById("allowDuet");
@@ -14,7 +14,6 @@ const allowStitchBox = document.getElementById("allowStitch");
 const refreshCreatorInfoBtn = document.getElementById("refreshCreatorInfo");
 const musicConsentCheckbox = document.getElementById("musicConsent");
 const postingNoticeEl = document.getElementById("postingNotice");
-const FORCED_VISIBILITY = "SELF_ONLY";
 const uploadBtn = document.getElementById("uploadBtn");
 const previewSection = document.getElementById("previewSection");
 const previewDetails = document.getElementById("previewDetails");
@@ -31,7 +30,7 @@ const homeBtn = document.getElementById("homeBtn");
 const privateAccountConfirm = document.getElementById("privateAccountConfirm");
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 let creatorInfo = null;
-let selectedPrivacy = FORCED_VISIBILITY;
+let selectedPrivacy = null;
 
 function setStatus(message, type = "info") {
   statusEl.textContent = message;
@@ -78,59 +77,52 @@ function formatBytes(bytes) {
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 }
 
+function formatPrivacyLabel(option) {
+  if (!option) {
+    return "";
+  }
+  const normalized = option.toUpperCase();
+  const labels = {
+    SELF_ONLY: "Self Only (Only you)",
+    FOLLOWER_OF_CREATOR: "Followers of the creator",
+    MUTUAL_FOLLOW_FRIENDS: "Friends (mutual follows)",
+    PUBLIC: "Public",
+  };
+  return labels[normalized] || option.replace(/_/g, " ");
+}
+
 function renderPrivacyOptions(options) {
-  privacyOptionList.innerHTML = "";
-  let optionsArray = Array.isArray(options) && options.length ? [...options] : [];
-  if (!optionsArray.includes(FORCED_VISIBILITY)) {
-    optionsArray = [FORCED_VISIBILITY, ...optionsArray];
+  if (!privacySelect) {
+    return;
   }
-  if (!optionsArray.length) {
-    optionsArray = [FORCED_VISIBILITY];
-  }
-  const disclaimer = [];
-  if (options && options.length) {
-    disclaimer.push("Select one of the options TikTok allows for your account.");
-  }
-  if (!optionsArray.includes("SELF_ONLY")) {
-    optionsArray.push("SELF_ONLY");
-  }
-  privacyDisclaimer.textContent =
-    disclaimer.join(" ") ||
-    "TikTok currently restricts this integration to 'Self Only' uploads.";
-  let hasSelection = false;
+  const optionsArray = Array.isArray(options) ? options.filter(Boolean) : [];
+  privacySelect.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Select privacy status";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  placeholder.hidden = true;
+  privacySelect.appendChild(placeholder);
+
   optionsArray.forEach((option) => {
-    const li = document.createElement("li");
-    const label = document.createElement("label");
-    label.className = "privacy-option";
-    if (option !== FORCED_VISIBILITY) {
-      label.classList.add("disabled");
-    }
-    const input = document.createElement("input");
-    input.type = "radio";
-    input.name = "privacyChoice";
-    input.value = option;
-    input.disabled = option !== FORCED_VISIBILITY;
-    input.addEventListener("change", () => {
-      selectedPrivacy = option;
-    });
-    const shouldSelect =
-      selectedPrivacy === option ||
-      (!selectedPrivacy && option === FORCED_VISIBILITY);
-    if (shouldSelect) {
-      input.checked = true;
-      selectedPrivacy = option;
-      hasSelection = true;
-    }
-    label.appendChild(input);
-    const text = document.createElement("span");
-    text.textContent =
-      option.toUpperCase() === "SELF_ONLY" ? "Self Only (Only you)" : option;
-    label.appendChild(text);
-    li.appendChild(label);
-    privacyOptionList.appendChild(li);
+    const opt = document.createElement("option");
+    opt.value = option;
+    opt.textContent = formatPrivacyLabel(option);
+    privacySelect.appendChild(opt);
   });
-  if (!hasSelection) {
-    selectedPrivacy = FORCED_VISIBILITY;
+
+  privacySelect.disabled = optionsArray.length === 0;
+  selectedPrivacy = null;
+  privacySelect.value = "";
+
+  if (!optionsArray.length) {
+    privacyDisclaimer.textContent =
+      "TikTok did not return any privacy levels for this account.";
+  } else {
+    privacyDisclaimer.textContent =
+      "Choose one of the privacy levels returned by TikTok.";
   }
 }
 
@@ -196,24 +188,15 @@ function renderCreatorInfo(response) {
   }
   creatorSection.hidden = false;
   const nickname =
-    response.nickname || (response.creator_info && response.creator_info.nickname) || "TikTok user";
+    response.nickname ||
+    (response.creator_info && response.creator_info.nickname) ||
+    "TikTok user";
   creatorNicknameEl.textContent = nickname;
-  const accountBits = [];
-  if (response.open_id) {
-    accountBits.push(`Open ID: ${response.open_id}`);
-  }
-  if (response.max_video_post_duration_sec) {
-    accountBits.push(
-      `Max duration: ${response.max_video_post_duration_sec}s`
-    );
-  }
-  creatorAccountMetaEl.textContent = accountBits.join(" · ");
+  creatorAccountMetaEl.textContent = `Creator's nickname: ${nickname}`;
 
-  const privacyOptions =
-    (response.privacy_options && response.privacy_options.length
-      ? response.privacy_options
-      : [FORCED_VISIBILITY]);
-  privacyOptionList.innerHTML = "";
+  const privacyOptions = Array.isArray(response.privacy_level_options)
+    ? response.privacy_level_options
+    : [];
   renderPrivacyOptions(privacyOptions);
 
   const interactions = response.interaction_settings || {};
@@ -370,6 +353,12 @@ if (commercialSelf) {
 if (commercialBrand) {
   commercialBrand.addEventListener("change", updateConsentText);
 }
+if (privacySelect) {
+  privacySelect.addEventListener("change", (event) => {
+    const value = event.target.value;
+    selectedPrivacy = value || null;
+  });
+}
 if (homeBtn) {
   homeBtn.addEventListener("click", () => {
     window.location.href = "https://avramco.github.io/";
@@ -437,13 +426,13 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
       return;
     }
     if (!selectedPrivacy) {
-      selectedPrivacy = FORCED_VISIBILITY;
-    }
-    if (selectedPrivacy !== FORCED_VISIBILITY) {
       setStatus(
-        "This sandbox can only upload with TikTok's 'Self Only' visibility until the app is approved.",
+        "Select a privacy status from the dropdown before uploading.",
         "error"
       );
+      if (privacySelect) {
+        privacySelect.focus();
+      }
       return;
     }
     if (!validateCommercialSelection()) {
