@@ -3,8 +3,7 @@ const BACKEND_URL =
 const SESSION_STORAGE_KEY = "hop2topSessionToken";
 const statusEl = document.getElementById("status");
 const titleInput = document.getElementById("videoTitle");
-const privacySelect = document.getElementById("privacySelect");
-const ALLOWED_VISIBILITY = ["private", "friends", "mutual_followers", "public"];
+const FORCED_VISIBILITY = "private";
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 
 function setStatus(message, type = "info") {
@@ -127,16 +126,11 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
       return;
     }
 
-    let visibility = privacySelect.value;
-    if (!ALLOWED_VISIBILITY.includes(visibility)) {
-      visibility = "private";
-    }
-
     const data = await callBackend("/upload", {
       method: "POST",
       body: {
         title,
-        visibility,
+        visibility: FORCED_VISIBILITY,
       },
     });
     console.log("Upload result:", data);
