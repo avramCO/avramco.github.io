@@ -27,7 +27,7 @@ const commercialAlert = document.getElementById("commercialAlert");
 const consentText = document.getElementById("consentText");
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 let creatorInfo = null;
-let selectedPrivacy = null;
+let selectedPrivacy = FORCED_VISIBILITY;
 
 function setStatus(message, type = "info") {
   statusEl.textContent = message;
@@ -76,18 +76,25 @@ function formatBytes(bytes) {
 
 function renderPrivacyOptions(options) {
   privacyOptionList.innerHTML = "";
-  selectedPrivacy = null;
+  let optionsArray = Array.isArray(options) && options.length ? [...options] : [];
+  if (!optionsArray.includes(FORCED_VISIBILITY)) {
+    optionsArray = [FORCED_VISIBILITY, ...optionsArray];
+  }
+  if (!optionsArray.length) {
+    optionsArray = [FORCED_VISIBILITY];
+  }
   const disclaimer = [];
   if (options && options.length) {
     disclaimer.push("Select one of the options TikTok allows for your account.");
   }
-  if (!options.includes("private")) {
-    options = [...options, "private"];
+  if (!optionsArray.includes("private")) {
+    optionsArray.push("private");
   }
   privacyDisclaimer.textContent =
     disclaimer.join(" ") ||
     "TikTok currently restricts this integration to private uploads.";
-  options.forEach((option) => {
+  let hasSelection = false;
+  optionsArray.forEach((option) => {
     const li = document.createElement("li");
     const label = document.createElement("label");
     label.className = "privacy-option";
@@ -102,9 +109,13 @@ function renderPrivacyOptions(options) {
     input.addEventListener("change", () => {
       selectedPrivacy = option;
     });
-    if (!selectedPrivacy && option === FORCED_VISIBILITY) {
+    const shouldSelect =
+      selectedPrivacy === option ||
+      (!selectedPrivacy && option === FORCED_VISIBILITY);
+    if (shouldSelect) {
       input.checked = true;
       selectedPrivacy = option;
+      hasSelection = true;
     }
     label.appendChild(input);
     const text = document.createElement("span");
@@ -113,6 +124,9 @@ function renderPrivacyOptions(options) {
     li.appendChild(label);
     privacyOptionList.appendChild(li);
   });
+  if (!hasSelection) {
+    selectedPrivacy = FORCED_VISIBILITY;
+  }
 }
 
 function updateConsentText() {
@@ -401,8 +415,7 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
       return;
     }
     if (!selectedPrivacy) {
-      setStatus("Please select a privacy option provided by TikTok.", "error");
-      return;
+      selectedPrivacy = FORCED_VISIBILITY;
     }
     if (selectedPrivacy !== FORCED_VISIBILITY) {
       setStatus(
