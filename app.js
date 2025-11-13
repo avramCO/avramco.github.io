@@ -25,6 +25,7 @@ const commercialSelf = document.getElementById("commercialSelf");
 const commercialBrand = document.getElementById("commercialBrand");
 const commercialAlert = document.getElementById("commercialAlert");
 const consentText = document.getElementById("consentText");
+const privateAccountConfirm = document.getElementById("privateAccountConfirm");
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 let creatorInfo = null;
 let selectedPrivacy = FORCED_VISIBILITY;
@@ -390,6 +391,14 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
   setStatus("Uploading to TikTok...");
   try {
     requireSession();
+    if (privateAccountConfirm && !privateAccountConfirm.checked) {
+      setStatus(
+        "Please confirm that your TikTok account is set to Private and visibility will remain 'Only You'.",
+        "error"
+      );
+      privateAccountConfirm.focus();
+      return;
+    }
     if (!musicConsentCheckbox.checked) {
       setStatus(
         "Please confirm TikTok's Music Usage agreement before uploading.",
