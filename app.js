@@ -25,18 +25,10 @@ const commercialSelf = document.getElementById("commercialSelf");
 const commercialBrand = document.getElementById("commercialBrand");
 const commercialAlert = document.getElementById("commercialAlert");
 const consentText = document.getElementById("consentText");
-const workflowPanel = document.getElementById("workflowPanel");
-const successPanel = document.getElementById("successPanel");
-const successHomeBtn = document.getElementById("successHomeBtn");
-const loginToast = document.getElementById("loginToast");
-const creatorAvatar = document.getElementById("creatorAvatar");
-const previewVisual = document.getElementById("previewVisual");
-const previewVisualLabel = document.getElementById("previewVisualLabel");
 const privateAccountConfirm = document.getElementById("privateAccountConfirm");
 let sessionToken = localStorage.getItem(SESSION_STORAGE_KEY);
 let creatorInfo = null;
 let selectedPrivacy = FORCED_VISIBILITY;
-let wasAuthenticated = false;
 
 function setStatus(message, type = "info") {
   statusEl.textContent = message;
@@ -183,10 +175,6 @@ async function loadPreview(force = false) {
     const data = await callBackend(`/preview${force ? "?force=1" : ""}`);
     if (data && data.filename) {
       previewSection.hidden = false;
-      if (previewVisual && previewVisualLabel) {
-        previewVisual.hidden = false;
-        previewVisualLabel.textContent = data.filename;
-      }
       previewDetails.innerHTML = `
         <strong>${data.filename}</strong><br>
         Size: ${formatBytes(data.size)}<br>
@@ -203,36 +191,19 @@ function renderCreatorInfo(response) {
     return;
   }
   creatorSection.hidden = false;
-  const info = response.creator_info || {};
   const nickname =
-    response.nickname ||
-    info.creator_nickname ||
-    info.nickname ||
-    "TikTok user";
+    response.nickname || (response.creator_info && response.creator_info.nickname) || "TikTok user";
   creatorNicknameEl.textContent = nickname;
   const accountBits = [];
   if (response.open_id) {
     accountBits.push(`Open ID: ${response.open_id}`);
   }
-  if (response.max_video_post_duration_sec || info.max_video_post_duration_sec) {
+  if (response.max_video_post_duration_sec) {
     accountBits.push(
-      `Max duration: ${
-        response.max_video_post_duration_sec || info.max_video_post_duration_sec
-      }s`
+      `Max duration: ${response.max_video_post_duration_sec}s`
     );
   }
   creatorAccountMetaEl.textContent = accountBits.join(" · ");
-
-  if (creatorAvatar) {
-    const avatarUrl =
-      info.avatar_url || info.avatar || info.profile_image || response.avatar_url;
-    if (avatarUrl) {
-      creatorAvatar.src = avatarUrl;
-      creatorAvatar.hidden = false;
-    } else {
-      creatorAvatar.hidden = true;
-    }
-  }
 
   const privacyOptions =
     (response.privacy_options && response.privacy_options.length
@@ -309,8 +280,6 @@ setUploadAvailability(
     ? "Uploads are currently limited to 'Private' visibility."
     : "Log in with TikTok to enable uploads."
 );
-if (successPanel) successPanel.hidden = true;
-if (workflowPanel) workflowPanel.hidden = false;
 
 async function callBackend(endpoint, { method = "GET", body, headers = {} } = {}) {
   const options = {
@@ -347,27 +316,16 @@ async function refreshAuthStatus() {
     if (status.authenticated) {
       setStatus("Logged in with TikTok.");
       loadCreatorInfo({ silent: true });
-      if (!wasAuthenticated) {
-        wasAuthenticated = true;
-        if (loginToast) {
-          loginToast.hidden = false;
-          setTimeout(() => {
-            loginToast.hidden = true;
-          }, 2500);
-        }
-      }
     } else if (sessionToken) {
       saveSessionToken(null);
       setStatus("Session expired. Please log in again.", "error");
       creatorSection.hidden = true;
       creatorInfo = null;
       setUploadAvailability(false, "Log in with TikTok to enable uploads.");
-      wasAuthenticated = false;
     } else {
       setStatus("Not logged in.");
       creatorSection.hidden = true;
       setUploadAvailability(false, "Log in with TikTok to enable uploads.");
-      wasAuthenticated = false;
     }
   } catch (err) {
     console.error(err);
@@ -406,11 +364,6 @@ if (commercialSelf) {
 if (commercialBrand) {
   commercialBrand.addEventListener("change", updateConsentText);
 }
-if (successHomeBtn) {
-  successHomeBtn.addEventListener("click", () => {
-    window.location.href = "https://avramco.github.io/";
-  });
-}
 
 document.getElementById("generateBtn").addEventListener("click", async () => {
   setStatus("Selecting a random video...");
@@ -436,8 +389,6 @@ document.getElementById("generateBtn").addEventListener("click", async () => {
 
 document.getElementById("uploadBtn").addEventListener("click", async () => {
   setStatus("Uploading to TikTok...");
-  if (workflowPanel) workflowPanel.hidden = false;
-  if (successPanel) successPanel.hidden = true;
   try {
     requireSession();
     if (privateAccountConfirm && !privateAccountConfirm.checked) {
@@ -504,19 +455,12 @@ document.getElementById("uploadBtn").addEventListener("click", async () => {
     });
     console.log("Upload result:", data);
     setStatus("Upload requested. Check TikTok for processing status.");
-    if (workflowPanel) workflowPanel.hidden = true;
-    if (successPanel) successPanel.hidden = false;
-    setTimeout(() => {
-      window.location.href = "https://avramco.github.io/success_upload.html";
-    }, 1200);
   } catch (err) {
     console.error(err);
     if (err.message === "Missing session token") {
       return;
     }
     setStatus(`Upload failed: ${err.message}`, "error");
-    if (workflowPanel) workflowPanel.hidden = false;
-    if (successPanel) successPanel.hidden = true;
   }
 });
 
